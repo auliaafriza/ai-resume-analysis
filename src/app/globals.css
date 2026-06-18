@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 33% 98%;        /* #FAF7F4 cream */
+    --foreground: 20 25% 20%;        /* dark warm brown */
+
+    --card: 0 0% 100%;
+    --card-foreground: 20 25% 20%;
+
+    --primary: 349 60% 65%;          /* rose-pink */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 30 25% 93%;         /* soft cream */
+    --secondary-foreground: 20 25% 20%;
+
+    --muted: 30 25% 93%;
+    --muted-foreground: 20 12% 52%;
+
+    --border: 28 22% 87%;            /* warm beige border */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  h1, h2, h3, h4 { @apply tracking-tight; }
+}
+
+@layer utilities {
+  /* Matches the logo's rose-to-coral gradient */
+  .gradient-text {
+    background: linear-gradient(135deg, #E8856A 0%, #D4697A 50%, #C5527A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Cream radial hero — same tone as logo background */
+  .gradient-hero {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(232,133,106,0.10) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(212,105,122,0.07) 0%, transparent 60%),
+      #FAF7F4;
+  }
+
+  .card-glass {
+    @apply rounded-2xl border bg-white shadow-sm;
+    border-color: #EDE3DB;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 40px -8px rgba(212,105,122,0.30);
+  }
+}

@@ -65,15 +65,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <main className="flex-1">{children}</main>
 
           {/* ── Footer ── */}
-          <footer className="border-t py-10" style={{ backgroundColor: "#FAF7F4", borderColor: "#EDE3DB" }}>
+          <footer className="border-t py-2" style={{ backgroundColor: "#FAF7F4", borderColor: "#EDE3DB" }}>
             <div className="mx-auto max-w-6xl px-6">
               <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
                 <Image
                   src="/logo.png"
                   alt="AI Resume Builder"
-                  width={140}
-                  height={84}
-                  className="h-10 w-auto object-contain opacity-90"
+                  width={260}
+                  height={150}
+                  className="h-[100px] w-auto object-contain bg-transparent"
+                  priority
                 />
                 <p className="text-xs" style={{ color: "#A07B6E" }}>
                   Powered by AI Builder Pluvia · © <CurrentYear /> AI Resume Builder. All rights reserved.

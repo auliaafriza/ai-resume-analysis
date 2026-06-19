@@ -31,6 +31,9 @@ export interface ReviewResponse {
   strengths: string[]
   improvements: string[]
   suggestions: string[]
+  kelebihan: string[]
+  perbaikan: string[]
+  saran: string[]
 }
 
 // ── Service response envelope ────────────────────────────────────────────────

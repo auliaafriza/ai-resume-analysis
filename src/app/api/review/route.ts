@@ -39,8 +39,12 @@ async function extractText(file: File): Promise<string> {
   return result.value
 }
 
-function buildUserPrompt(resumeText: string, targetRole?: string, jobDescription?: string): string {
-  const lines: string[] = ["=== RESUME ===", resumeText]
+function buildUserPrompt(resumeText: string, targetRole?: string, jobDescription?: string, language = "en"): string {
+  const langInstruction = language === "id"
+    ? "PENTING: Seluruh respons harus dalam Bahasa Indonesia. Semua teks dalam JSON (summary, comment, strengths, improvements, suggestions) wajib ditulis dalam Bahasa Indonesia."
+    : "Respond in English."
+
+  const lines: string[] = [langInstruction, "", "=== RESUME ===", resumeText]
   if (targetRole) lines.push("", "=== TARGET ROLE ===", targetRole)
   if (jobDescription) lines.push("", "=== JOB DESCRIPTION ===", jobDescription)
   return lines.join("\n")
@@ -77,6 +81,7 @@ export async function POST(request: Request) {
     const file = formData.get("file")
     const targetRole = (formData.get("targetRole") as string | null) ?? undefined
     const jobDescription = (formData.get("jobDescription") as string | null) ?? undefined
+    const language = (formData.get("language") as string | null) ?? "en"
 
     if (!(file instanceof File)) {
       return NextResponse.json(buildError("No file uploaded.", 400), { status: 400 })
@@ -95,7 +100,7 @@ export async function POST(request: Request) {
       model: MODEL,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: buildUserPrompt(resumeText, targetRole, jobDescription) },
+        { role: "user", content: buildUserPrompt(resumeText, targetRole, jobDescription, language) },
       ],
       temperature: 0.3,
       max_tokens: 1500,

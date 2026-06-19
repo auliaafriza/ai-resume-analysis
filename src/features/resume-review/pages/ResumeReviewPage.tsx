@@ -377,7 +377,7 @@ export function ResumeReviewPage() {
             {/* ── Result panel ── */}
             <div id="result">
               {result ? (
-                <ReviewResult result={result} />
+                <ReviewResult result={result} lang={lang}/>
               ) : (
                 <div className="flex h-full min-h-80 flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-border/60 bg-white/50 p-10 text-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">

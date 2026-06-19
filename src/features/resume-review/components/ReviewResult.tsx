@@ -13,6 +13,28 @@ const html2pdf = typeof window !== "undefined" ? require("html2pdf.js") : null
 
 interface ReviewResultProps {
   result: ReviewResponse
+  lang: "en" | "id"
+}
+
+const T = {
+  en: {
+    downloadReport: "Download Report",
+    badge: "Powered by Pluvia AI Builder",
+    areaImporve: "Areas to Improve",
+    strengths: "Strengths",
+    overAllScore: "Overall Score",
+    suggestions: "Actionable Suggestions",
+    categoryBreakdown: "Category Breakdown",
+  },
+  id: {
+    downloadReport: "Unduh Laporan",
+    badge: "Ditenagai oleh AI Builder Pluvia AI",
+    areaImporve: "Area yang Perlu Diperbaiki",
+    strengths: "Kelebihan",
+    overAllScore: "Skor Keseluruhan",
+    suggestions: "Saran yang Dapat Diambil",
+    categoryBreakdown: "Pembagian Kategori",
+  },
 }
 
 function scoreColor(score: number) {
@@ -28,26 +50,16 @@ function scoreLabel(score: number) {
   return "Needs work"
 }
 
-export function ReviewResult({ result }: Readonly<ReviewResultProps>) {
+export function ReviewResult({ result, lang }: Readonly<ReviewResultProps>) {
   const { text, ring } = scoreColor(result.overallScore)
   const printRef = useRef<HTMLDivElement>(null)
   const [isDownloading, setIsDownloading] = useState(false)
   const strength =
-    result?.strengths?.length > 0
-      ? result.strengths
-      : result?.kelebihan?.length > 0
-        ? result.kelebihan
-        : []
-  const improvement = result?.improvements?.length > 0
-    ? result.improvements
-    : result?.perbaikan?.length > 0
-      ? result.perbaikan
-      : []
-  const suggestion = result?.suggestions?.length > 0
-    ? result.suggestions
-    : result?.saran?.length > 0
-      ? result.saran
-      : []
+    result?.strengths?.length > 0 ? result.strengths : result?.kelebihan?.length > 0 ? result.kelebihan : []
+  const improvement =
+    result?.improvements?.length > 0 ? result.improvements : result?.perbaikan?.length > 0 ? result.perbaikan : []
+  const suggestion =
+    result?.suggestions?.length > 0 ? result.suggestions : result?.saran?.length > 0 ? result.saran : []
 
   const waitForDownloadRender = () =>
     new Promise<void>((resolve) => {
@@ -118,6 +130,8 @@ export function ReviewResult({ result }: Readonly<ReviewResultProps>) {
     }
   }
 
+  const t = T[lang] || T.en
+
   return (
     <div className="card-glass">
       <div ref={printRef} className="space-y-5 p-8">
@@ -137,7 +151,7 @@ export function ReviewResult({ result }: Readonly<ReviewResultProps>) {
             <div className="mb-0.5 flex items-center gap-2">
               <span className={cn("text-sm font-bold", text)}>{scoreLabel(result.overallScore)}</span>
               <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-600">
-                Overall Score
+                {t.overAllScore}
               </span>
             </div>
             <p className="text-sm leading-snug text-muted-foreground">{result.summary}</p>
@@ -148,7 +162,7 @@ export function ReviewResult({ result }: Readonly<ReviewResultProps>) {
         {result.scores.length > 0 && (
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Category Breakdown
+              {t.categoryBreakdown}
             </p>
             <div className="space-y-3">
               {result.scores.map((s) => {
@@ -178,7 +192,7 @@ export function ReviewResult({ result }: Readonly<ReviewResultProps>) {
           <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
             <p className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              Strengths
+              {t.strengths}
             </p>
             <ul className="space-y-1.5">
               {strength.map((s) => (
@@ -196,7 +210,7 @@ export function ReviewResult({ result }: Readonly<ReviewResultProps>) {
           <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-4">
             <p className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold text-amber-700">
               <AlertCircle className="h-3.5 w-3.5" />
-              Areas to Improve
+              {t.areaImporve}
             </p>
             <ul className="space-y-1.5">
               {improvement.map((s) => (
@@ -214,7 +228,7 @@ export function ReviewResult({ result }: Readonly<ReviewResultProps>) {
           <div className="rounded-xl border border-rose-100 bg-rose-50/60 p-4">
             <p className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold text-rose-700">
               <Lightbulb className="h-3.5 w-3.5" />
-              Actionable Suggestions
+              {t.suggestions}
             </p>
             <ol className="space-y-2">
               {suggestion.map((s, i) => (
@@ -243,14 +257,14 @@ export function ReviewResult({ result }: Readonly<ReviewResultProps>) {
               Loading…
             </>
           ) : (
-            <>Download Report</>
+            <>{t.downloadReport}</>
           )}
         </button>
 
         {/* ── Footer badge ── */}
         <div className="flex items-center justify-end gap-1.5 pt-2 text-[11px] text-muted-foreground">
           <Sparkles className="h-3 w-3 text-rose-400" />
-          Analysed by Groq
+          {t.badge}
         </div>
       </div>
     </div>

@@ -28,7 +28,7 @@ const T = {
   },
   id: {
     downloadReport: "Unduh Laporan",
-    badge: "Ditenagai oleh AI Builder Pluvia AI",
+    badge: "Ditenagai oleh AI Builder Pluvia",
     areaImporve: "Area yang Perlu Diperbaiki",
     strengths: "Kelebihan",
     overAllScore: "Skor Keseluruhan",

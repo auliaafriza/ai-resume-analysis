@@ -29,7 +29,7 @@ type Lang = "en" | "id"
 
 const T = {
   en: {
-    badge: "Powered by AI Builder Pluvia AI",
+    badge: "Powered by AI Builder Pluvia",
     hero: { h1a: "Get AI feedback on", h1b: "your resume", h1c: "in seconds", sub: "Upload your CV and receive an instant, detailed analysis — ATS score, strengths, weaknesses, and actionable improvements.", cta: "Analyze my resume", howItWorks: "How it works" },
     proof: ["No sign-up required", "Free to use", "Results in <10 seconds", "Privacy-first"],
     featuresLabel: "Why ResumeAI",
@@ -75,7 +75,7 @@ const T = {
     langToggle: "ID",
   },
   id: {
-    badge: "Didukung oleh AI Builder Pluvia AI",
+    badge: "Didukung oleh AI Builder Pluvia",
     hero: { h1a: "Dapatkan feedback AI untuk", h1b: "resume kamu", h1c: "dalam hitungan detik", sub: "Upload CV kamu dan dapatkan analisis mendalam secara instan — skor ATS, kekuatan, kelemahan, dan saran perbaikan.", cta: "Analisis resume saya", howItWorks: "Cara kerja" },
     proof: ["Tanpa daftar akun", "Gratis digunakan", "Hasil dalam <10 detik", "Privasi terjaga"],
     featuresLabel: "Kenapa ResumeAI",

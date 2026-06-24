@@ -264,7 +264,7 @@ export function CreateResumePage() {
         {/* ── Color pickers ── */}
         <div className="mb-8 grid gap-6 sm:grid-cols-2">
           <ColorPicker label="Background Color" presets={BG_PRESETS} value={bgColor} onChange={setBgColor} />
-          <ColorPicker label="Accent Color" presets={ACCENT_PRESETS} value={accentColor} onChange={setAccentColor} />
+          <ColorPicker label="Accent Color / Text Color" presets={ACCENT_PRESETS} value={accentColor} onChange={setAccentColor} />
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_480px]">

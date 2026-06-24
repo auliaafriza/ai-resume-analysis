@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 
-import { ArrowLeft, Download, Loader2, Mail, MapPin, Phone } from "lucide-react"
+import { ArrowLeft, Download, Loader2 } from "lucide-react"
 import Link from "next/link"
 
 import { EducationForm } from "@/features/create-resume/components/form/EducationForm"

@@ -1,6 +1,7 @@
 "use client"
 
 import type { ResumeData } from '@/lib/interface/createResume'
+import { Mail, MapPin, Phone } from 'lucide-react'
 import React from 'react'
 
 interface PreviewProps {

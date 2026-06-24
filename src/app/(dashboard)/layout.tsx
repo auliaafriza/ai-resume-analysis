@@ -5,6 +5,7 @@ import Link from "next/link"
 
 import { CurrentYear } from "@/components/CurrentYear"
 import { NavLinks } from "@/components/NavLinks"
+import { TrackPageView } from "@/components/TrackPageView"
 import { AppProvider } from "@/providers/AppProvider"
 import { QueryProvider } from "@/providers/QueryProvider"
 
@@ -44,6 +45,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               </Link>
             </div>
           </header>
+
+          <TrackPageView />
 
           {/* ── Page content ── */}
           <main className="flex-1">{children}</main>

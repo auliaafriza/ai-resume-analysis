@@ -5,6 +5,7 @@ import React, { useRef, useState } from "react"
 import { AlertCircle, CheckCircle2, ChevronRight, Lightbulb, Loader2, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 
+import { BENCHMARKS, type Industry } from "@/features/resume-review/constants/benchmarks"
 import type { ReviewResponse } from "@/features/resume-review/types"
 import { cn } from "@/lib/utils/cn"
 
@@ -14,6 +15,7 @@ const html2pdf = typeof window !== "undefined" ? require("html2pdf.js") : null
 interface ReviewResultProps {
   result: ReviewResponse
   lang: "en" | "id"
+  industry?: Industry
 }
 
 const T = {
@@ -25,6 +27,11 @@ const T = {
     overAllScore: "Overall Score",
     suggestions: "Actionable Suggestions",
     categoryBreakdown: "Category Breakdown",
+    benchmark: "Industry Benchmark",
+    benchmarkYou: "You",
+    benchmarkAvg: "Industry avg",
+    benchmarkAbove: "above benchmark",
+    benchmarkBelow: "below benchmark",
   },
   id: {
     downloadReport: "Unduh Laporan",
@@ -34,6 +41,11 @@ const T = {
     overAllScore: "Skor Keseluruhan",
     suggestions: "Saran yang Dapat Diambil",
     categoryBreakdown: "Pembagian Kategori",
+    benchmark: "Benchmark Industri",
+    benchmarkYou: "Kamu",
+    benchmarkAvg: "Rata-rata industri",
+    benchmarkAbove: "di atas benchmark",
+    benchmarkBelow: "di bawah benchmark",
   },
 }
 
@@ -50,7 +62,7 @@ function scoreLabel(score: number) {
   return "Needs work"
 }
 
-export function ReviewResult({ result, lang }: Readonly<ReviewResultProps>) {
+export function ReviewResult({ result, lang, industry }: Readonly<ReviewResultProps>) {
   const { text, ring } = scoreColor(result.overallScore)
   const printRef = useRef<HTMLDivElement>(null)
   const [isDownloading, setIsDownloading] = useState(false)
@@ -131,6 +143,7 @@ export function ReviewResult({ result, lang }: Readonly<ReviewResultProps>) {
   }
 
   const t = T[lang] || T.en
+  const benchmark = industry ? BENCHMARKS[industry] : null
 
   return (
     <div className="card-glass">
@@ -158,6 +171,51 @@ export function ReviewResult({ result, lang }: Readonly<ReviewResultProps>) {
           </div>
         </div>
 
+        {/* ── Industry benchmark panel ── */}
+        {benchmark && (
+          <div className="rounded-xl border border-border/60 bg-secondary/30 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t.benchmark}
+              </p>
+              <span className="flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-[11px] font-medium text-foreground shadow-sm" style={{ borderColor: "#EDE3DB", border: "1px solid" }}>
+                {benchmark.emoji} {lang === "id" ? benchmark.labelId : benchmark.label}
+              </span>
+            </div>
+            {/* Overall benchmark */}
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex-1">
+                <div className="mb-1 flex justify-between text-[11px]">
+                  <span className="text-muted-foreground">{t.benchmarkAvg}</span>
+                  <span className="font-semibold text-foreground">{benchmark.overall}</span>
+                </div>
+                <div className="relative h-2 w-full overflow-hidden rounded-full bg-white/70">
+                  {/* benchmark line */}
+                  <div className="absolute top-0 h-full rounded-full bg-border/80" style={{ width: `${benchmark.overall}%` }} />
+                  {/* user score line */}
+                  <div
+                    className={cn("absolute top-0 h-full rounded-full opacity-80", scoreColor(result.overallScore).bar)}
+                    style={{ width: `${result.overallScore}%` }}
+                  />
+                </div>
+              </div>
+              <span className={cn(
+                "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold",
+                result.overallScore >= benchmark.overall
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-red-50 text-red-600"
+              )}>
+                {result.overallScore >= benchmark.overall ? "▲" : "▼"} {Math.abs(result.overallScore - benchmark.overall)}pts {result.overallScore >= benchmark.overall ? t.benchmarkAbove : t.benchmarkBelow}
+              </span>
+            </div>
+            {/* Legend */}
+            <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="inline-block h-2 w-4 rounded-full bg-border/80" />{t.benchmarkAvg}</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2 w-4 rounded-full" style={{ background: "linear-gradient(90deg, #E8856A, #C5527A)" }} />{t.benchmarkYou}</span>
+            </div>
+          </div>
+        )}
+
         {/* ── Category breakdown ── */}
         {result.scores.length > 0 && (
           <div>
@@ -167,15 +225,25 @@ export function ReviewResult({ result, lang }: Readonly<ReviewResultProps>) {
             <div className="space-y-3">
               {result.scores.map((s) => {
                 const c = scoreColor(s.score)
+                const benchAvg = benchmark?.scores[s.category]
                 return (
                   <div key={s.category}>
                     <div className="mb-1 flex items-center justify-between">
                       <span className="text-xs font-medium text-foreground">{s.category}</span>
-                      <span className={cn("text-xs font-bold", c.text)}>{s.score}</span>
+                      <div className="flex items-center gap-2">
+                        {benchAvg !== undefined && (
+                          <span className="text-[10px] text-muted-foreground">avg {benchAvg}</span>
+                        )}
+                        <span className={cn("text-xs font-bold", c.text)}>{s.score}</span>
+                      </div>
                     </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                    {/* Stacked bar: benchmark grey + user score colored */}
+                    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                      {benchAvg !== undefined && (
+                        <div className="absolute top-0 h-full rounded-full bg-border/60" style={{ width: `${benchAvg}%` }} />
+                      )}
                       <div
-                        className={cn("h-full rounded-full transition-all duration-700", c.bar)}
+                        className={cn("absolute top-0 h-full rounded-full transition-all duration-700 opacity-90", c.bar)}
                         style={{ width: `${s.score}%` }}
                       />
                     </div>

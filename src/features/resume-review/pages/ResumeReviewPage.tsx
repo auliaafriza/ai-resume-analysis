@@ -19,6 +19,7 @@ import { toast } from "sonner"
 
 import { ResumeUpload } from "@/features/resume-review/components/ResumeUpload"
 import { ReviewResult } from "@/features/resume-review/components/ReviewResult"
+import { INDUSTRY_OPTIONS, type Industry } from "@/features/resume-review/constants/benchmarks"
 import { useMutationReview } from "@/features/resume-review/services/review/post"
 import type { ReviewResponse } from "@/features/resume-review/types"
 import { cn } from "@/lib/utils/cn"
@@ -71,6 +72,9 @@ const T = {
     ctaSub: "Get instant AI feedback and start landing more interviews today.",
     ctaBtn: "Analyze my resume for free",
     toastSuccess: "Analysis complete!",
+    industry: "Industry benchmark",
+    industryOptional: "(optional — compare against industry average)",
+    industryPlaceholder: "Select industry…",
     fileError: "Please upload your resume before submitting.",
     langToggle: "ID",
   },
@@ -117,6 +121,9 @@ const T = {
     ctaSub: "Dapatkan feedback AI instan dan mulai mendapatkan lebih banyak panggilan interview.",
     ctaBtn: "Analisis resume saya gratis",
     toastSuccess: "Analisis selesai!",
+    industry: "Benchmark industri",
+    industryOptional: "(opsional — bandingkan dengan rata-rata industri)",
+    industryPlaceholder: "Pilih industri…",
     fileError: "Silakan upload resume kamu sebelum mengirim.",
     langToggle: "EN",
   },
@@ -170,6 +177,7 @@ export function ResumeReviewPage() {
   const [fileError, setFileError] = useState<string | undefined>()
   const [targetRole, setTargetRole] = useState("")
   const [jobDescription, setJobDescription] = useState("")
+  const [industry, setIndustry] = useState<Industry | "">("")
   const [result, setResult] = useState<ReviewResponse | null>(null)
 
   const t = T[lang]
@@ -339,6 +347,26 @@ export function ResumeReviewPage() {
                 />
               </div>
 
+              {/* Industry benchmark */}
+              <div className="space-y-1.5">
+                <label htmlFor="industry" className="block text-sm font-medium text-foreground">
+                  {t.industry} <span className="text-muted-foreground">{t.industryOptional}</span>
+                </label>
+                <select
+                  id="industry"
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value as Industry | "")}
+                  className="w-full rounded-xl border border-border bg-white px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-rose-400/40"
+                >
+                  <option value="">{t.industryPlaceholder}</option>
+                  {INDUSTRY_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.emoji} {lang === "id" ? opt.labelId : opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Job description */}
               <div className="space-y-1.5">
                 <label htmlFor="jobDescription" className="block text-sm font-medium text-foreground">
@@ -349,7 +377,7 @@ export function ResumeReviewPage() {
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
                   placeholder={t.jdPlaceholder}
-                  rows={5}
+                  rows={4}
                   className="w-full resize-y rounded-xl border border-border bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rose-400/40"
                 />
               </div>
@@ -377,7 +405,7 @@ export function ResumeReviewPage() {
             {/* ── Result panel ── */}
             <div id="result">
               {result ? (
-                <ReviewResult result={result} lang={lang}/>
+                <ReviewResult result={result} lang={lang} industry={industry || undefined} />
               ) : (
                 <div className="flex h-full min-h-80 flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-border/60 bg-white/50 p-10 text-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">

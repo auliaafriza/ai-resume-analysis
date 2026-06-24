@@ -567,7 +567,7 @@ export function CreateResumePage() {
                 </button>
               </div>
               {data.experiences.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground py-4">No experience added yet. Click "Add" to start.</p>
+                <p className="text-center text-sm text-muted-foreground py-4">No experience added yet. Click Add to start.</p>
               )}
               {data.experiences.map((exp, idx) => (
                 <div key={exp.id} className={cn("rounded-xl border border-border/60 p-4", idx > 0 && "mt-4")}>

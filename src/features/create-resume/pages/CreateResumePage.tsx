@@ -2,9 +2,10 @@
 
 import { useRef, useState } from "react"
 
-import { ArrowLeft, Download, Loader2 } from "lucide-react"
+import { ArrowLeft, Download, Loader2, Sparkles } from "lucide-react"
 import Link from "next/link"
 
+import { GenerateWithAIModal } from "@/features/create-resume/components/GenerateWithAIModal"
 import { EducationForm } from "@/features/create-resume/components/form/EducationForm"
 import { ExperienceForm } from "@/features/create-resume/components/form/ExperienceForm"
 import { PersonalInfoForm } from "@/features/create-resume/components/form/PersonalInfoForm"
@@ -140,10 +141,21 @@ export function CreateResumePage() {
   const [accentColor, setAccentColor] = useState(TEMPLATE_DEFAULT_ACCENT.modern)
   const [data, setData] = useState<ResumeData>(BLANK)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [showGenerateModal, setShowGenerateModal] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
 
   // ── Generic field setter
   const set = <K extends keyof ResumeData>(key: K, val: ResumeData[K]) => setData((d) => ({ ...d, [key]: val }))
+
+  // ── Handle AI-generated resume data
+  const handleGenerated = (generated: Partial<ResumeData>) => {
+    setData((prev) => ({
+      ...prev,
+      ...generated,
+      // preserve photo if already uploaded
+      photo: prev.photo || generated.photo || "",
+    }))
+  }
 
   // ── Experience helpers
   const addExp = () =>
@@ -222,15 +234,25 @@ export function CreateResumePage() {
             <span className="text-muted-foreground">/</span>
             <h1 className="text-sm font-semibold text-foreground">Create Resume</h1>
           </div>
-          <button
-            onClick={handleDownload}
-            disabled={isDownloading}
-            className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-60"
-            style={{ background: "linear-gradient(135deg, #E8856A 0%, #D4697A 50%, #C5527A 100%)" }}
-          >
-            {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Download PDF
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowGenerateModal(true)}
+              className="flex items-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-semibold transition-all hover:opacity-90"
+              style={{ borderColor: "#C5527A", color: "#C5527A", backgroundColor: "#FDF0F0" }}
+            >
+              <Sparkles className="h-4 w-4" />
+              Generate with AI
+            </button>
+            <button
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-60"
+              style={{ background: "linear-gradient(135deg, #E8856A 0%, #D4697A 50%, #C5527A 100%)" }}
+            >
+              {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Download PDF
+            </button>
+          </div>
         </div>
       </div>
 
@@ -287,6 +309,14 @@ export function CreateResumePage() {
           </div>
         </div>
       </div>
+
+      {/* ── Generate with AI modal ── */}
+      {showGenerateModal && (
+        <GenerateWithAIModal
+          onGenerated={handleGenerated}
+          onClose={() => setShowGenerateModal(false)}
+        />
+      )}
     </div>
   )
 }

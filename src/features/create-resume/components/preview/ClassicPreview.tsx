@@ -26,19 +26,19 @@ const ClassicPreview = ({ data, bgColor, accentColor }: PreviewProps) => {
           </div>
         )}
         <h1 className="text-xl font-bold uppercase tracking-widest" style={{ color: accentColor }}>
-          {data.name || "Your Name"}
+          {data?.name ?? "Your Name"}
         </h1>
         <p className="mt-0.5 text-[10px] text-gray-500">
-          {[data.email, data.phone, data.location].filter(Boolean).join(" · ")}
+          {[data?.email, data?.phone, data?.location].filter(Boolean).join(" · ")}
         </p>
-        {data.title && <p className="mt-0.5 text-[10px] font-semibold text-gray-600">{data.title}</p>}
+        {data?.title && <p className="mt-0.5 text-[10px] font-semibold text-gray-600">{data?.title ?? "-"}</p>}
       </div>
       {data.summary && (
         <div className="mb-3">
           <p className="mb-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
             Professional Summary
           </p>
-          <p className="text-[10px] leading-relaxed text-gray-600">{data.summary}</p>
+          <p className="text-[10px] leading-relaxed text-gray-600">{data?.summary ?? "-"}</p>
         </div>
       )}
       {data.experiences.length > 0 && (
@@ -49,14 +49,14 @@ const ClassicPreview = ({ data, bgColor, accentColor }: PreviewProps) => {
           {data.experiences.map((e) => (
             <div key={e.id} className="mb-2">
               <div className="flex justify-between">
-                <p className="font-bold text-gray-800">{e.role}</p>
+                <p className="font-bold text-gray-800">{e?.role ?? "-"}</p>
                 <p className="text-[9px] text-gray-400">
-                  {e.start}
-                  {e.start && (e.current ? " – Present" : e.end ? ` – ${e.end}` : "")}
+                  {e?.start ?? "-"}
+                  {e?.start && (e?.current ? " – Present" : e?.end ? ` – ${e?.end}` : "")}
                 </p>
               </div>
-              <p className="text-[10px] italic text-gray-500">{e.company}</p>
-              {e.bullets.filter(Boolean).map((b, i) => (
+              <p className="text-[10px] italic text-gray-500">{e?.company ?? "-"}</p>
+              {e?.bullets?.filter(Boolean).map((b, i) => (
                 <p key={i} className="pl-3 text-[10px] text-gray-600 before:mr-1 before:content-['•']">
                   {b}
                 </p>
@@ -74,11 +74,11 @@ const ClassicPreview = ({ data, bgColor, accentColor }: PreviewProps) => {
             <div key={e.id} className="mb-1.5 flex justify-between">
               <div>
                 <p className="font-bold text-gray-800">
-                  {e.degree} {e.field}
+                  {e?.degree ?? "-"} {e?.field ?? "-"}
                 </p>
-                <p className="text-[10px] text-gray-500">{e.institution}</p>
+                <p className="text-[10px] text-gray-500">{e?.institution ?? "-"}</p>
               </div>
-              <p className="text-[9px] text-gray-400">{e.year}</p>
+              <p className="text-[9px] text-gray-400">{e?.year ?? "-"}</p>
             </div>
           ))}
         </div>

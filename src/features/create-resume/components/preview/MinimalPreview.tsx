@@ -57,7 +57,7 @@ const MinimalPreview = ({ data, bgColor, accentColor }: PreviewProps) => {
               <p className="text-[10px] text-gray-400">{e.company}</p>
               {e.bullets.filter(Boolean).map((b, i) => (
                 <p key={i} className="mt-0.5 text-[10px] text-gray-500">
-                  — {b}
+                  — {b ?? ""}
                 </p>
               ))}
             </div>
@@ -72,10 +72,10 @@ const MinimalPreview = ({ data, bgColor, accentColor }: PreviewProps) => {
           {data.educations.map((e) => (
             <div key={e.id} className="mb-1.5">
               <p className="font-semibold text-gray-800">
-                {e.degree} {e.field}
+                {e?.degree ?? ""} {e?.field ?? ""}
               </p>
               <p className="text-[10px] text-gray-400">
-                {e.institution} · {e.year}
+                {e?.institution ?? ""} · {e?.year ?? ""}
               </p>
             </div>
           ))}

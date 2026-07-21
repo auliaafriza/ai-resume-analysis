@@ -82,7 +82,7 @@ export function GenerateWithAIModal({ lang = "en", onGenerated, onClose }: Props
         // Ensure each experience/education has a valid id (fallback)
         const resume = json.resume
         if (resume.experiences) {
-          resume.experiences = resume.experiences.map((e, i) => ({
+          resume.experiences = resume.experiences.map((e) => ({
             ...e,
             id: e.id || crypto.randomUUID(),
             bullets: Array.isArray(e.bullets) ? e.bullets : [],
@@ -91,7 +91,7 @@ export function GenerateWithAIModal({ lang = "en", onGenerated, onClose }: Props
           }))
         }
         if (resume.educations) {
-          resume.educations = resume.educations.map((e, i) => ({
+          resume.educations = resume.educations.map((e) => ({
             ...e,
             id: e.id || crypto.randomUUID(),
           }))

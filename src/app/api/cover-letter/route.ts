@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server"
+import type { NextRequest} from "next/server";
+import { NextResponse } from "next/server"
 import Groq from "groq-sdk"
 import mammoth from "mammoth"
 import pdfParse from "pdf-parse"

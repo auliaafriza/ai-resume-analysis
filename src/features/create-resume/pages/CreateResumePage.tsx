@@ -1,8 +1,8 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
-import { ArrowLeft, Download, Loader2, Sparkles } from "lucide-react"
+import { ArrowLeft, Download, Loader2, RotateCcw, Save, Sparkles, X } from "lucide-react"
 import Link from "next/link"
 
 import { GenerateWithAIModal } from "@/features/create-resume/components/GenerateWithAIModal"
@@ -10,6 +10,7 @@ import { EducationForm } from "@/features/create-resume/components/form/Educatio
 import { ExperienceForm } from "@/features/create-resume/components/form/ExperienceForm"
 import { PersonalInfoForm } from "@/features/create-resume/components/form/PersonalInfoForm"
 import { SkillsForm } from "@/features/create-resume/components/form/SkillsForm"
+import { timeAgo, useDraft } from "@/features/create-resume/hooks/useDraft"
 import type { Education, Experience, ResumeData, Template } from "@/lib/interface/createResume"
 import { cn } from "@/lib/utils/cn"
 
@@ -142,7 +143,37 @@ export function CreateResumePage() {
   const [data, setData] = useState<ResumeData>(BLANK)
   const [isDownloading, setIsDownloading] = useState(false)
   const [showGenerateModal, setShowGenerateModal] = useState(false)
+  const [showRestoreBanner, setShowRestoreBanner] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
+
+  // ── Draft persistence ──────────────────────────────────────────────────────
+  const { loadDraft, scheduleSave, clearDraft, savedAt, hasDraft } = useDraft()
+
+  // On mount: show restore banner if a draft exists
+  useEffect(() => {
+    if (hasDraft) setShowRestoreBanner(true)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // run once — hasDraft is stable after first check
+
+  // Auto-save on every meaningful state change (debounced 1.5s)
+  useEffect(() => {
+    scheduleSave({ template, bgColor, accentColor, data })
+  }, [template, bgColor, accentColor, data, scheduleSave])
+
+  const handleRestoreDraft = () => {
+    const draft = loadDraft()
+    if (!draft) return
+    setTemplate(draft.template)
+    setBgColor(draft.bgColor)
+    setAccentColor(draft.accentColor)
+    setData(draft.data)
+    setShowRestoreBanner(false)
+  }
+
+  const handleDiscardDraft = () => {
+    clearDraft()
+    setShowRestoreBanner(false)
+  }
 
   // ── Generic field setter
   const set = <K extends keyof ResumeData>(key: K, val: ResumeData[K]) => setData((d) => ({ ...d, [key]: val }))
@@ -235,6 +266,23 @@ export function CreateResumePage() {
             <h1 className="text-sm font-semibold text-foreground">Create Resume</h1>
           </div>
           <div className="flex items-center gap-2">
+            {/* Draft saved indicator */}
+            {savedAt && (
+              <div
+                className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium"
+                style={{ borderColor: "#D1FAE5", backgroundColor: "#F0FDF4", color: "#059669" }}
+              >
+                <Save className="h-3 w-3" />
+                <span>Saved {timeAgo(savedAt)}</span>
+                <button
+                  onClick={handleDiscardDraft}
+                  title="Clear draft"
+                  className="ml-0.5 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
             <button
               onClick={() => setShowGenerateModal(true)}
               className="flex items-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-semibold transition-all hover:opacity-90"
@@ -255,6 +303,40 @@ export function CreateResumePage() {
           </div>
         </div>
       </div>
+
+      {/* ── Restore draft banner ── */}
+      {showRestoreBanner && (
+        <div
+          className="border-b px-6 py-3"
+          style={{ backgroundColor: "#FFFBEB", borderColor: "#FDE68A" }}
+        >
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5 text-sm" style={{ color: "#92400E" }}>
+              <RotateCcw className="h-4 w-4 shrink-0" />
+              <span>
+                You have an unsaved draft.{" "}
+                <strong>Restore it</strong> to continue where you left off.
+              </span>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                onClick={handleRestoreDraft}
+                className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: "#D97706" }}
+              >
+                Restore draft
+              </button>
+              <button
+                onClick={handleDiscardDraft}
+                className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:bg-amber-100"
+                style={{ color: "#92400E" }}
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mx-auto max-w-7xl px-6 py-8">
         {/* ── Template picker ── */}

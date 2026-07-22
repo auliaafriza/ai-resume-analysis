@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 
 import { CurrentYear } from "@/components/CurrentYear"
+import { MobileNav } from "@/components/MobileNav"
 import { NavLinks } from "@/components/NavLinks"
 import { TrackPageView } from "@/components/TrackPageView"
 import { AppProvider } from "@/providers/AppProvider"
@@ -19,7 +20,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             className="sticky top-0 z-50 border-b backdrop-blur-md"
             style={{ backgroundColor: "#FAF7F4CC", borderColor: "#EDE3DB" }}
           >
-            <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6">
+            <div className="mx-auto flex min-h-10 max-w-6xl items-center justify-between px-6">
               {/* Logo — clearly visible on cream bg */}
               <Link href="/" className="flex items-center">
                 <Image
@@ -32,17 +33,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 />
               </Link>
 
-              {/* Nav links */}
+              {/* Desktop nav links */}
               <NavLinks />
 
-              {/* CTA — rose gradient matching logo palette */}
-              <Link
-                href="#upload"
-                className="rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #E8856A 0%, #D4697A 50%, #C5527A 100%)" }}
-              >
-                Analyze Resume
-              </Link>
+              {/* Right-side actions */}
+              <div className="flex items-center gap-2">
+                {/* Desktop CTA */}
+                <Link
+                  href="#upload"
+                  className="hidden rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 md:inline-flex"
+                  style={{ background: "linear-gradient(135deg, #E8856A 0%, #D4697A 50%, #C5527A 100%)" }}
+                >
+                  Analyze Resume
+                </Link>
+
+                {/* Mobile hamburger — renders its own drawer */}
+                <MobileNav />
+              </div>
             </div>
           </header>
 

@@ -3,19 +3,14 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-const LINKS = [
-  { label: "How it works", href: "/resume-review#how-it-works", match: "/resume-review" },
-  { label: "Features", href: "/resume-review#features", match: "/resume-review" },
-  { label: "Create Resume", href: "/create-resume", match: "/create-resume" },
-  { label: "Cover Letter", href: "/cover-letter", match: "/cover-letter" },
-]
+import { NAV_LINKS } from "@/components/navConfig"
 
 export function NavLinks() {
   const pathname = usePathname()
 
   return (
     <nav className="hidden items-center gap-6 md:flex">
-      {LINKS.map(({ label, href, match }) => {
+      {NAV_LINKS.map(({ label, href, match }) => {
         const isActive = pathname === match || pathname.startsWith(match + "/")
         return (
           <Link

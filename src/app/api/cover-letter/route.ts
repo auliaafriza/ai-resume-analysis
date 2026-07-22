@@ -4,6 +4,8 @@ import Groq from "groq-sdk"
 import mammoth from "mammoth"
 import pdfParse from "pdf-parse"
 
+import { checkRateLimit, getClientIP, rateLimitResponse } from "@/lib/rateLimit"
+
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY ?? "" })
 const MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile"
 
@@ -77,6 +79,11 @@ function buildUserPrompt(
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  // ── Rate limit: 5 requests per minute per IP ──────────────────────────────
+  const ip = getClientIP(req)
+  const rl = checkRateLimit(`cover-letter:${ip}`, 5, 60_000)
+  if (!rl.ok) return rateLimitResponse(rl)
+
   try {
     const contentType = req.headers.get("content-type") ?? ""
     let resumeText = ""

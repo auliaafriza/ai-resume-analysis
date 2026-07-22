@@ -82,7 +82,7 @@ function ExecutivePreview({ data, bgColor, accentColor }: PreviewProps) {
             </div>
           )}
           {data.skills.length > 0 && (
-            <div>
+            <div className="mb-4">
               <p className="mb-2 text-[9px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
                 Competencies
               </p>
@@ -93,6 +93,39 @@ function ExecutivePreview({ data, bgColor, accentColor }: PreviewProps) {
                 >
                   {s}
                 </p>
+              ))}
+            </div>
+          )}
+          {data.certifications.length > 0 && (
+            <div className="mb-4">
+              <p className="mb-2 text-[9px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+                Certifications
+              </p>
+              {data.certifications.map((c) => (
+                <div key={c.id} className="mb-1.5">
+                  <p className="text-[10px] font-bold text-gray-800">{c.name}</p>
+                  <p className="text-[10px] text-gray-400">{c.issuer}{c.date && ` · ${c.date}`}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {data.projects.length > 0 && (
+            <div>
+              <p className="mb-2 text-[9px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+                Projects
+              </p>
+              {data.projects.map((p) => (
+                <div key={p.id} className="mb-2">
+                  <p className="text-[10px] font-bold text-gray-800">{p.name}</p>
+                  {p.description && (
+                    <p className="text-[10px] text-gray-600">{p.description}</p>
+                  )}
+                  {p.tech.length > 0 && (
+                    <p className="mt-0.5 text-[9px]" style={{ color: accentColor }}>
+                      {p.tech.join(" · ")}
+                    </p>
+                  )}
+                </div>
               ))}
             </div>
           )}

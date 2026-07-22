@@ -63,7 +63,7 @@ const ModernPreview = ({ data, bgColor, accentColor }: PreviewProps) => {
           </div>
         )}
         {data.educations.length > 0 && (
-          <div>
+          <div className="mb-4">
             <p className="mb-1.5 border-b-2 pb-1 text-[10px] font-bold uppercase tracking-widest" style={{ borderColor: accentColor, color: accentColor }}>Education</p>
             {data.educations.map((e) => (
               <div key={e.id} className="mb-2">
@@ -72,6 +72,33 @@ const ModernPreview = ({ data, bgColor, accentColor }: PreviewProps) => {
                   <p className="text-[9px] text-gray-400">{e.year}</p>
                 </div>
                 <p className="text-[10px] text-gray-500">{e.institution}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {data.certifications.length > 0 && (
+          <div className="mb-4">
+            <p className="mb-1.5 border-b-2 pb-1 text-[10px] font-bold uppercase tracking-widest" style={{ borderColor: accentColor, color: accentColor }}>Certifications</p>
+            {data.certifications.map((c) => (
+              <div key={c.id} className="mb-2">
+                <p className="font-bold text-gray-800">{c.name}</p>
+                <p className="text-[10px] text-gray-500">{c.issuer}{c.date && ` · ${c.date}`}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {data.projects.length > 0 && (
+          <div>
+            <p className="mb-1.5 border-b-2 pb-1 text-[10px] font-bold uppercase tracking-widest" style={{ borderColor: accentColor, color: accentColor }}>Projects</p>
+            {data.projects.map((p) => (
+              <div key={p.id} className="mb-2.5">
+                <p className="font-bold text-gray-800">{p.name}</p>
+                {p.description && <p className="text-[10px] leading-relaxed text-gray-600">{p.description}</p>}
+                {p.tech.length > 0 && (
+                  <p className="mt-0.5 text-[9px]" style={{ color: accentColor }}>
+                    {p.tech.join(" · ")}
+                  </p>
+                )}
               </div>
             ))}
           </div>

@@ -4,6 +4,7 @@ import mammoth from "mammoth"
 import pdfParse from "pdf-parse"
 
 import type { ApiResponse, ReviewResponse } from "@/features/resume-review/types"
+import { checkRateLimit, getClientIP, rateLimitResponse } from "@/lib/rateLimit"
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY ?? "" })
 const MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile"
@@ -76,6 +77,11 @@ Be honest, specific, and constructive. Never fabricate information not in the re
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
+  // ── Rate limit: 5 requests per minute per IP ──────────────────────────────
+  const ip = getClientIP(request)
+  const rl = checkRateLimit(`review:${ip}`, 5, 60_000)
+  if (!rl.ok) return rateLimitResponse(rl)
+
   try {
     const formData = await request.formData()
     const file = formData.get("file")

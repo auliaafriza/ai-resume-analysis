@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import {
   AlertCircle,
@@ -9,10 +9,14 @@ import {
   Download,
   FileText,
   Loader2,
+  RotateCcw,
+  Save,
   Sparkles,
   Upload,
   X,
 } from "lucide-react"
+
+import { timeAgo, useLocalDraft } from "@/lib/useLocalDraft"
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 
@@ -53,6 +57,12 @@ const T = {
     fileError: "Only PDF or Word (.docx) files are supported.",
     sizeError: "File size must be under 5 MB.",
     resumeRequired: "Please upload your resume or paste your resume text.",
+    draftRestored: "Draft restored",
+    draftSaved: "Saved",
+    draftBanner: "You have a saved draft. Restore it to continue where you left off.",
+    draftRestore: "Restore",
+    draftDiscard: "Discard",
+    draftFileNote: "File attachment is not saved — please re-upload your resume.",
   },
   id: {
     title: "Generator Cover Letter",
@@ -90,6 +100,12 @@ const T = {
     fileError: "Hanya file PDF atau Word (.docx) yang didukung.",
     sizeError: "Ukuran file harus di bawah 5 MB.",
     resumeRequired: "Silakan upload CV atau tempel teks CV kamu.",
+    draftRestored: "Draft dipulihkan",
+    draftSaved: "Tersimpan",
+    draftBanner: "Kamu punya draft tersimpan. Pulihkan untuk melanjutkan dari mana kamu berhenti.",
+    draftRestore: "Pulihkan",
+    draftDiscard: "Buang",
+    draftFileNote: "File lampiran tidak tersimpan — upload ulang CV kamu.",
   },
 }
 
@@ -168,6 +184,51 @@ export function CoverLetterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [copied, setCopied] = useState(false)
+
+  // ── Draft persistence ──────────────────────────────────────────────────────
+  const [showRestoreBanner, setShowRestoreBanner] = useState(false)
+
+  const { hasDraft, savedAt, scheduleSave, loadDraft, clearDraft } =
+    useLocalDraft<{
+      lang: Lang
+      mode: InputMode
+      pasteText: string
+      company: string
+      jobTitle: string
+      jobDescription: string
+      tone: Tone
+      coverLetter: string
+    }>("ai-resume-builder:cover-letter-draft")
+
+  // Show restore banner on mount if draft exists
+  useEffect(() => {
+    if (hasDraft) setShowRestoreBanner(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Auto-save on every relevant state change (file excluded — not serialisable)
+  useEffect(() => {
+    scheduleSave({ lang, mode, pasteText, company, jobTitle, jobDescription, tone, coverLetter })
+  }, [lang, mode, pasteText, company, jobTitle, jobDescription, tone, coverLetter, scheduleSave])
+
+  const handleRestoreDraft = () => {
+    const draft = loadDraft()
+    if (!draft) return
+    setLang(draft.lang)
+    setMode(draft.mode)
+    setPasteText(draft.pasteText)
+    setCompany(draft.company)
+    setJobTitle(draft.jobTitle)
+    setJobDescription(draft.jobDescription)
+    setTone(draft.tone)
+    setCoverLetter(draft.coverLetter)
+    setShowRestoreBanner(false)
+  }
+
+  const handleDiscardDraft = () => {
+    clearDraft()
+    setShowRestoreBanner(false)
+  }
 
   const t = T[lang]
   const wordCount = coverLetter.trim() ? coverLetter.trim().split(/\s+/).length : 0
@@ -319,6 +380,38 @@ export function CoverLetterPage() {
           ))}
         </div>
       </div>
+
+      {/* ── Restore draft banner ── */}
+      {showRestoreBanner && (
+        <div className="border-b px-4 py-3" style={{ backgroundColor: "#FFFBEB", borderColor: "#FDE68A" }}>
+          <div className="mx-auto flex max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className="flex items-start gap-2.5 text-xs sm:text-sm" style={{ color: "#92400E" }}>
+              <RotateCcw className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <p>{t.draftBanner}</p>
+                {/* Remind user that file uploads aren't persisted */}
+                <p className="mt-0.5 opacity-70">{t.draftFileNote}</p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                onClick={handleRestoreDraft}
+                className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: "#D97706" }}
+              >
+                {t.draftRestore}
+              </button>
+              <button
+                onClick={handleDiscardDraft}
+                className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:bg-amber-100"
+                style={{ color: "#92400E" }}
+              >
+                {t.draftDiscard}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Main grid ── */}
       <div className="mx-auto max-w-5xl px-6 pb-16">
@@ -507,6 +600,25 @@ export function CoverLetterPage() {
               >
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
                 <p className="text-xs text-red-700">{t.errorPrefix}{error}</p>
+              </div>
+            )}
+
+            {/* Draft saved chip */}
+            {savedAt && (
+              <div className="flex items-center justify-between rounded-xl border px-3.5 py-2.5"
+                style={{ borderColor: "#D1FAE5", backgroundColor: "#F0FDF4" }}>
+                <div className="flex items-center gap-2 text-xs font-medium" style={{ color: "#059669" }}>
+                  <Save className="h-3.5 w-3.5" />
+                  {t.draftSaved} {timeAgo(savedAt)}
+                </div>
+                <button
+                  onClick={handleDiscardDraft}
+                  title="Clear draft"
+                  className="rounded p-1 opacity-50 transition-opacity hover:opacity-100"
+                  style={{ color: "#059669" }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
               </div>
             )}
 

@@ -83,6 +83,36 @@ const ClassicPreview = ({ data, bgColor, accentColor }: PreviewProps) => {
           ))}
         </div>
       )}
+      {data.certifications.length > 0 && (
+        <div className="mb-3">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+            Certifications
+          </p>
+          {data.certifications.map((c) => (
+            <div key={c.id} className="mb-1 flex justify-between">
+              <div>
+                <p className="text-[10px] font-bold text-gray-800">{c.name}</p>
+                <p className="text-[10px] italic text-gray-500">{c.issuer}</p>
+              </div>
+              {c.date && <p className="text-[9px] text-gray-400">{c.date}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+      {data.projects.length > 0 && (
+        <div className="mb-3">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+            Projects
+          </p>
+          {data.projects.map((p) => (
+            <div key={p.id} className="mb-2">
+              <p className="text-[10px] font-bold text-gray-800">{p.name}</p>
+              {p.description && <p className="text-[10px] text-gray-600">{p.description}</p>}
+              {p.tech.length > 0 && <p className="text-[9px]" style={{ color: accentColor }}>{p.tech.join(", ")}</p>}
+            </div>
+          ))}
+        </div>
+      )}
       {data.skills.length > 0 && (
         <div>
           <p className="mb-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>

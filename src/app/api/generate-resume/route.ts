@@ -2,6 +2,8 @@ import type { NextRequest} from "next/server";
 import { NextResponse } from "next/server"
 import Groq from "groq-sdk"
 
+import { checkRateLimit, getClientIP, rateLimitResponse } from "@/lib/rateLimit"
+
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY ?? "" })
 const MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile"
 
@@ -71,6 +73,11 @@ function buildPrompt(description: string, targetRole: string, language: string) 
 }
 
 export async function POST(req: NextRequest) {
+  // ── Rate limit: 10 requests per minute per IP ─────────────────────────────
+  const ip = getClientIP(req)
+  const rl = checkRateLimit(`generate-resume:${ip}`, 10, 60_000)
+  if (!rl.ok) return rateLimitResponse(rl)
+
   try {
     const body = await req.json()
     const { description, targetRole = "", language = "en" } = body as {

@@ -29,55 +29,53 @@ export function CertificationsForm({ certifications, onAdd, onUpdate, onRemove }
         </button>
       </div>
 
-      {certifications.length === 0 && (
-        <p className="py-4 text-center text-sm text-muted-foreground">
-          No certifications added yet.
-        </p>
-      )}
+      {certifications && certifications.length ? (
+        certifications.map((cert, idx) => (
+          <div key={cert.id} className={cn("rounded-xl border border-border/60 p-4", idx > 0 && "mt-4")}>
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground">Certification {idx + 1}</span>
+              <button
+                onClick={() => onRemove(cert.id)}
+                className="rounded-lg p-1 text-muted-foreground hover:bg-red-50 hover:text-red-500"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
 
-      {certifications.map((cert, idx) => (
-        <div key={cert.id} className={cn("rounded-xl border border-border/60 p-4", idx > 0 && "mt-4")}>
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground">Certification {idx + 1}</span>
-            <button
-              onClick={() => onRemove(cert.id)}
-              className="rounded-lg p-1 text-muted-foreground hover:bg-red-50 hover:text-red-500"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2">
-            <input
-              className={cn(inputCls, "sm:col-span-2")}
-              placeholder="Certification name (e.g. AWS Solutions Architect)"
-              value={cert.name}
-              onChange={(e) => onUpdate(cert.id, { name: e.target.value })}
-            />
-            <input
-              className={inputCls}
-              placeholder="Issuing organization"
-              value={cert.issuer}
-              onChange={(e) => onUpdate(cert.id, { issuer: e.target.value })}
-            />
-            <input
-              className={inputCls}
-              placeholder="Date (e.g. Jun 2023)"
-              value={cert.date}
-              onChange={(e) => onUpdate(cert.id, { date: e.target.value })}
-            />
-            <div className="relative sm:col-span-2">
-              <ExternalLink className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <div className="grid gap-2 sm:grid-cols-2">
               <input
-                className={cn(inputCls, "pl-9")}
-                placeholder="Credential URL (optional)"
-                value={cert.url}
-                onChange={(e) => onUpdate(cert.id, { url: e.target.value })}
+                className={cn(inputCls, "sm:col-span-2")}
+                placeholder="Certification name (e.g. AWS Solutions Architect)"
+                value={cert.name}
+                onChange={(e) => onUpdate(cert.id, { name: e.target.value })}
               />
+              <input
+                className={inputCls}
+                placeholder="Issuing organization"
+                value={cert.issuer}
+                onChange={(e) => onUpdate(cert.id, { issuer: e.target.value })}
+              />
+              <input
+                className={inputCls}
+                placeholder="Date (e.g. Jun 2023)"
+                value={cert.date}
+                onChange={(e) => onUpdate(cert.id, { date: e.target.value })}
+              />
+              <div className="relative sm:col-span-2">
+                <ExternalLink className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  className={cn(inputCls, "pl-9")}
+                  placeholder="Credential URL (optional)"
+                  value={cert.url}
+                  onChange={(e) => onUpdate(cert.id, { url: e.target.value })}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))
+      ) : (
+        <p className="py-4 text-center text-sm text-muted-foreground">No certifications added yet.</p>
+      )}
     </div>
   )
 }

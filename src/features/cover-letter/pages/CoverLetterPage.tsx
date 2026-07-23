@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react"
 
+import { cn } from "@/lib/utils/cn"
 import { timeAgo, useLocalDraft } from "@/lib/useLocalDraft"
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
@@ -113,6 +114,40 @@ type Lang = "en" | "id"
 type Tone = "professional" | "enthusiastic" | "concise" | "creative"
 type InputMode = "upload" | "paste"
 
+// ── Style constants ───────────────────────────────────────────────────────────
+
+const FONTS: { id: string; label: string; family: string; category: "sans" | "serif" }[] = [
+  { id: "georgia",      label: "Georgia",      family: "Georgia, serif",              category: "serif" },
+  { id: "merriweather", label: "Merriweather", family: "'Merriweather', serif",       category: "serif" },
+  { id: "playfair",     label: "Playfair",     family: "'Playfair Display', serif",   category: "serif" },
+  { id: "inter",        label: "Inter",        family: "'Inter', sans-serif",         category: "sans"  },
+  { id: "lato",         label: "Lato",         family: "'Lato', sans-serif",          category: "sans"  },
+  { id: "raleway",      label: "Raleway",      family: "'Raleway', sans-serif",       category: "sans"  },
+]
+
+const GOOGLE_FONTS_URL =
+  "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700" +
+  "&family=Lato:wght@400;700" +
+  "&family=Raleway:wght@400;500;600;700" +
+  "&family=Playfair+Display:wght@400;600;700" +
+  "&family=Merriweather:wght@400;700" +
+  "&display=swap"
+
+const DEFAULT_FONT_ID = "georgia"
+
+const COVER_ACCENT_PRESETS = [
+  { label: "Navy",      value: "#1E3A5F" },
+  { label: "Charcoal",  value: "#333333" },
+  { label: "Rose",      value: "#C5527A" },
+  { label: "Forest",    value: "#166534" },
+  { label: "Teal",      value: "#0F766E" },
+  { label: "Slate",     value: "#475569" },
+  { label: "Gold",      value: "#8B6914" },
+  { label: "Burgundy",  value: "#7F1D1D" },
+]
+
+const DEFAULT_OUTPUT_ACCENT = "#1E3A5F"
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TONES: Tone[] = ["professional", "enthusiastic", "concise", "creative"]
@@ -157,6 +192,66 @@ const inputStyle = {
   backgroundColor: "#F9FAFB",
 }
 
+// ── Style sub-components ──────────────────────────────────────────────────────
+
+function FontRow({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  return (
+    <div>
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#8B5E52" }}>Font</p>
+      <div className="flex flex-wrap gap-2">
+        {FONTS.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => onChange(f.id)}
+            className={cn(
+              "rounded-lg border-2 px-3 py-1.5 text-xs transition-all",
+              value === f.id
+                ? "border-rose-400 bg-white shadow-sm"
+                : "border-transparent bg-gray-100 hover:border-rose-200",
+            )}
+            style={{ fontFamily: f.family }}
+          >
+            {f.label}
+            <span className="ml-1 text-[9px] opacity-40">{f.category === "serif" ? "Serif" : "Sans"}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function AccentRow({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#8B5E52" }}>Accent Color</p>
+      <div className="flex flex-wrap items-center gap-2">
+        {COVER_ACCENT_PRESETS.map((p) => (
+          <button
+            key={p.value}
+            onClick={() => onChange(p.value)}
+            title={p.label}
+            className={cn(
+              "h-7 w-7 rounded-full border-2 transition-all hover:scale-110",
+              value === p.value ? "scale-110 border-rose-400 shadow-md" : "border-transparent",
+            )}
+            style={{ backgroundColor: p.value }}
+          />
+        ))}
+        <div className="flex items-center gap-1.5">
+          <input
+            type="color"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="h-7 w-7 cursor-pointer rounded-full border-2 border-gray-200 p-0.5"
+            title="Custom"
+          />
+          <span className="font-mono text-[11px] text-gray-400">{value}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function CoverLetterPage() {
@@ -179,11 +274,25 @@ export function CoverLetterPage() {
   // Options
   const [tone, setTone] = useState<Tone>("professional")
 
+  // Style options
+  const [fontId, setFontId] = useState(DEFAULT_FONT_ID)
+  const [outputAccent, setOutputAccent] = useState(DEFAULT_OUTPUT_ACCENT)
+
   // Output state
   const [coverLetter, setCoverLetter] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [copied, setCopied] = useState(false)
+
+  // ── Google Fonts loader ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (document.getElementById("cover-letter-google-fonts")) return
+    const link = document.createElement("link")
+    link.id = "cover-letter-google-fonts"
+    link.rel = "stylesheet"
+    link.href = GOOGLE_FONTS_URL
+    document.head.appendChild(link)
+  }, [])
 
   // ── Draft persistence ──────────────────────────────────────────────────────
   const [showRestoreBanner, setShowRestoreBanner] = useState(false)
@@ -197,6 +306,8 @@ export function CoverLetterPage() {
       jobTitle: string
       jobDescription: string
       tone: Tone
+      fontId: string
+      outputAccent: string
       coverLetter: string
     }>("ai-resume-builder:cover-letter-draft")
 
@@ -208,8 +319,8 @@ export function CoverLetterPage() {
 
   // Auto-save on every relevant state change (file excluded — not serialisable)
   useEffect(() => {
-    scheduleSave({ lang, mode, pasteText, company, jobTitle, jobDescription, tone, coverLetter })
-  }, [lang, mode, pasteText, company, jobTitle, jobDescription, tone, coverLetter, scheduleSave])
+    scheduleSave({ lang, mode, pasteText, company, jobTitle, jobDescription, tone, fontId, outputAccent, coverLetter })
+  }, [lang, mode, pasteText, company, jobTitle, jobDescription, tone, fontId, outputAccent, coverLetter, scheduleSave])
 
   const handleRestoreDraft = () => {
     const draft = loadDraft()
@@ -221,6 +332,8 @@ export function CoverLetterPage() {
     setJobTitle(draft.jobTitle)
     setJobDescription(draft.jobDescription)
     setTone(draft.tone)
+    setFontId(draft.fontId ?? DEFAULT_FONT_ID)
+    setOutputAccent(draft.outputAccent ?? DEFAULT_OUTPUT_ACCENT)
     setCoverLetter(draft.coverLetter)
     setShowRestoreBanner(false)
   }
@@ -232,6 +345,7 @@ export function CoverLetterPage() {
 
   const t = T[lang]
   const wordCount = coverLetter.trim() ? coverLetter.trim().split(/\s+/).length : 0
+  const fontFamily = (FONTS.find((f) => f.id === fontId) ?? FONTS[0]).family
 
   // ── File handlers ──────────────────────────────────────────────────────────
 
@@ -592,6 +706,17 @@ export function CoverLetterPage() {
               </div>
             </SectionCard>
 
+            {/* Style: Font + Accent Color */}
+            <SectionCard>
+              <p className="mb-4 text-xs font-semibold uppercase tracking-widest" style={{ color: ACCENT }}>
+                Style
+              </p>
+              <div className="space-y-4">
+                <FontRow value={fontId} onChange={setFontId} />
+                <AccentRow value={outputAccent} onChange={setOutputAccent} />
+              </div>
+            </SectionCard>
+
             {/* Error */}
             {error && (
               <div
@@ -647,19 +772,19 @@ export function CoverLetterPage() {
           <div className="lg:sticky lg:top-24 lg:self-start">
             <div
               className="overflow-hidden rounded-2xl border bg-white"
-              style={{ borderColor: BORDER }}
+              style={{ borderColor: BORDER, borderTop: `3px solid ${outputAccent}` }}
             >
               {/* Output header */}
               <div
                 className="flex items-center justify-between border-b px-5 py-4"
-                style={{ borderColor: BORDER, background: "linear-gradient(135deg, #FDF0F0 0%, #FAF7F4 100%)" }}
+                style={{ borderColor: BORDER, background: `linear-gradient(135deg, ${outputAccent}18 0%, #FAF7F4 100%)` }}
               >
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" style={{ color: ACCENT }} />
+                  <FileText className="h-4 w-4" style={{ color: outputAccent }} />
                   <p className="text-sm font-semibold" style={{ color: "#2D1B15" }}>{t.outputTitle}</p>
                 </div>
                 {coverLetter && (
-                  <span className="rounded-full px-2.5 py-0.5 text-[11px] font-medium" style={{ backgroundColor: ACCENT_LIGHT, color: ACCENT }}>
+                  <span className="rounded-full px-2.5 py-0.5 text-[11px] font-medium" style={{ backgroundColor: `${outputAccent}18`, color: outputAccent }}>
                     {wordCount} {t.words}
                   </span>
                 )}
@@ -670,14 +795,14 @@ export function CoverLetterPage() {
                 {loading ? (
                   <div className="flex h-64 items-center justify-center">
                     <div className="text-center">
-                      <Loader2 className="mx-auto h-8 w-8 animate-spin" style={{ color: ACCENT }} />
+                      <Loader2 className="mx-auto h-8 w-8 animate-spin" style={{ color: outputAccent }} />
                       <p className="mt-3 text-sm text-gray-400">{t.generating}</p>
                     </div>
                   </div>
                 ) : coverLetter ? (
                   <div
                     className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800"
-                    style={{ fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: "1.75" }}
+                    style={{ fontFamily, lineHeight: "1.75" }}
                   >
                     {coverLetter}
                   </div>
@@ -717,7 +842,7 @@ export function CoverLetterPage() {
                   <button
                     onClick={handleDownload}
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-semibold text-white transition-all hover:opacity-90"
-                    style={{ background: "linear-gradient(135deg, #E8856A 0%, #C5527A 100%)" }}
+                    style={{ backgroundColor: outputAccent }}
                   >
                     <Download className="h-3.5 w-3.5" />
                     {t.download}

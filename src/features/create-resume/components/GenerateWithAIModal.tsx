@@ -57,7 +57,7 @@ export function GenerateWithAIModal({ lang = "en", onGenerated, onClose }: Props
   const [error, setError] = useState("")
 
   const t = T[lang]
-  const charCount = description.length
+  const charCount = description ? description.length : 0  
 
   const handleGenerate = async () => {
     if (!description.trim()) return
@@ -113,7 +113,7 @@ export function GenerateWithAIModal({ lang = "en", onGenerated, onClose }: Props
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(e) => e?.target === e?.currentTarget && onClose()}
     >
       <div
         className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
@@ -132,8 +132,8 @@ export function GenerateWithAIModal({ lang = "en", onGenerated, onClose }: Props
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-gray-900">{t.title}</h2>
-              <p className="text-xs text-gray-500">{t.subtitle}</p>
+              <h2 className="text-base font-bold text-gray-900">{t?.title}</h2>
+              <p className="text-xs text-gray-500">{t?.subtitle}</p>
             </div>
           </div>
           <button
@@ -148,7 +148,7 @@ export function GenerateWithAIModal({ lang = "en", onGenerated, onClose }: Props
         <div className="space-y-4 p-6">
           {/* Description */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-gray-700">{t.descLabel}</label>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-700">{t?.descLabel}</label>
             <textarea
               rows={7}
               value={description}
@@ -158,7 +158,7 @@ export function GenerateWithAIModal({ lang = "en", onGenerated, onClose }: Props
               disabled={loading}
             />
             <div className="mt-1 flex items-center justify-between">
-              <p className="text-[11px] text-gray-400">{t.descHint}</p>
+              <p className="text-[11px] text-gray-400">{t?.descHint}</p>
               <span className={`text-[11px] ${charCount < 50 ? "text-red-400" : "text-gray-400"}`}>
                 {charCount} chars
               </span>
@@ -172,7 +172,7 @@ export function GenerateWithAIModal({ lang = "en", onGenerated, onClose }: Props
               type="text"
               value={targetRole}
               onChange={(e) => setTargetRole(e.target.value)}
-              placeholder={t.rolePlaceholder}
+              placeholder={t?.rolePlaceholder}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-rose-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-400/30"
               disabled={loading}
             />
@@ -180,7 +180,7 @@ export function GenerateWithAIModal({ lang = "en", onGenerated, onClose }: Props
 
           {/* Language */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-gray-700">{t.langLabel}</label>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-700">{t?.langLabel}</label>
             <div className="flex gap-2">
               {(["en", "id"] as const).map((l) => (
                 <button
@@ -201,15 +201,15 @@ export function GenerateWithAIModal({ lang = "en", onGenerated, onClose }: Props
           </div>
 
           {/* Error */}
-          {error && (
+          {error ? (
             <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-              <p className="text-xs text-red-700">{t.errorPrefix}{error}</p>
+              <p className="text-xs text-red-700">{t?.errorPrefix}{error}</p>
             </div>
-          )}
+          ) : null}
 
           {/* Tip */}
-          <p className="text-[11px] text-gray-400">{t.tip}</p>
+          <p className="text-[11px] text-gray-400">{t?.tip}</p>
         </div>
 
         {/* Footer */}

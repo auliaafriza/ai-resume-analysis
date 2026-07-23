@@ -21,6 +21,27 @@ import ExecutivePreview from "../components/preview/ExecutivePreview"
 import MinimalPreview from "../components/preview/MinimalPreview"
 import ModernPreview from "../components/preview/ModernPreview"
 
+// ── Fonts ─────────────────────────────────────────────────────────────────────
+
+const FONTS: { id: string; label: string; family: string; category: "sans" | "serif" }[] = [
+  { id: "inter",        label: "Inter",        family: "'Inter', sans-serif",         category: "sans"  },
+  { id: "lato",         label: "Lato",         family: "'Lato', sans-serif",          category: "sans"  },
+  { id: "raleway",      label: "Raleway",      family: "'Raleway', sans-serif",       category: "sans"  },
+  { id: "georgia",      label: "Georgia",      family: "Georgia, serif",              category: "serif" },
+  { id: "playfair",     label: "Playfair",     family: "'Playfair Display', serif",   category: "serif" },
+  { id: "merriweather", label: "Merriweather", family: "'Merriweather', serif",       category: "serif" },
+]
+
+const GOOGLE_FONTS_URL =
+  "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700" +
+  "&family=Lato:wght@400;700" +
+  "&family=Raleway:wght@400;500;600;700" +
+  "&family=Playfair+Display:wght@400;600;700" +
+  "&family=Merriweather:wght@400;700" +
+  "&display=swap"
+
+const DEFAULT_FONT_ID = "inter"
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const BLANK: ResumeData = {
@@ -82,6 +103,7 @@ interface PreviewProps {
   data: ResumeData
   bgColor: string
   accentColor: string
+  fontFamily?: string
 }
 
 const PREVIEW_MAP: Record<Template, React.ComponentType<PreviewProps>> = {
@@ -138,12 +160,44 @@ function ColorPicker({
   )
 }
 
+// ── Font picker helper ────────────────────────────────────────────────────────
+
+function FontPicker({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  return (
+    <div>
+      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-rose-500">Font</p>
+      <div className="flex flex-wrap gap-2">
+        {FONTS.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => onChange(f.id)}
+            title={f.category === "serif" ? "Serif" : "Sans-serif"}
+            className={cn(
+              "rounded-xl border-2 px-4 py-2 text-sm transition-all",
+              value === f.id
+                ? "border-rose-400 bg-white shadow-md"
+                : "border-border bg-white/60 hover:border-rose-200",
+            )}
+            style={{ fontFamily: f.family }}
+          >
+            {f.label}
+            <span className="ml-1.5 text-[9px] font-normal opacity-40">
+              {f.category === "serif" ? "Serif" : "Sans"}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export function CreateResumePage() {
   const [template, setTemplate] = useState<Template>("modern")
   const [bgColor, setBgColor] = useState("#ffffff")
   const [accentColor, setAccentColor] = useState(TEMPLATE_DEFAULT_ACCENT.modern)
+  const [fontId, setFontId] = useState(DEFAULT_FONT_ID)
   const [data, setData] = useState<ResumeData>(BLANK)
   const [isDownloading, setIsDownloading] = useState(false)
   const [showGenerateModal, setShowGenerateModal] = useState(false)
@@ -151,6 +205,16 @@ export function CreateResumePage() {
   const [showMobilePreview, setShowMobilePreview] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)      // desktop sticky preview
   const printTargetRef = useRef<HTMLDivElement>(null)  // off-screen mobile print target
+
+  // ── Google Fonts loader ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (document.getElementById("resume-google-fonts")) return
+    const link = document.createElement("link")
+    link.id = "resume-google-fonts"
+    link.rel = "stylesheet"
+    link.href = GOOGLE_FONTS_URL
+    document.head.appendChild(link)
+  }, [])
 
   // ── Draft persistence ──────────────────────────────────────────────────────
   const { loadDraft, scheduleSave, clearDraft, savedAt, hasDraft } = useDraft()
@@ -163,8 +227,8 @@ export function CreateResumePage() {
 
   // Auto-save on every meaningful state change (debounced 1.5s)
   useEffect(() => {
-    scheduleSave({ template, bgColor, accentColor, data })
-  }, [template, bgColor, accentColor, data, scheduleSave])
+    scheduleSave({ template, bgColor, accentColor, fontId, data })
+  }, [template, bgColor, accentColor, fontId, data, scheduleSave])
 
   const handleRestoreDraft = () => {
     const draft = loadDraft()
@@ -172,6 +236,7 @@ export function CreateResumePage() {
     setTemplate(draft.template)
     setBgColor(draft.bgColor)
     setAccentColor(draft.accentColor)
+    setFontId(draft.fontId ?? DEFAULT_FONT_ID)
     setData(draft.data)
     setShowRestoreBanner(false)
   }
@@ -293,6 +358,7 @@ export function CreateResumePage() {
     }
   }
 
+  const fontFamily = (FONTS.find((f) => f.id === fontId) ?? FONTS[0]).family
   const Preview = PREVIEW_MAP[template]
 
   return (
@@ -316,7 +382,7 @@ export function CreateResumePage() {
           {/* Right */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {/* Draft saved chip — icon-only on mobile */}
-            {savedAt && (
+            {savedAt ? (
               <div
                 className="flex items-center gap-1 rounded-lg border px-2 py-1.5 text-xs font-medium sm:gap-1.5 sm:px-2.5"
                 style={{ borderColor: "#D1FAE5", backgroundColor: "#F0FDF4", color: "#059669" }}
@@ -331,7 +397,7 @@ export function CreateResumePage() {
                   <X className="h-3 w-3" />
                 </button>
               </div>
-            )}
+            ) : null}
 
             {/* Generate with AI — label hidden on xs */}
             <button
@@ -359,7 +425,7 @@ export function CreateResumePage() {
       </div>
 
       {/* ── Restore draft banner ── */}
-      {showRestoreBanner && (
+      {showRestoreBanner ? (
         <div
           className="border-b px-4 py-3 sm:px-6"
           style={{ backgroundColor: "#FFFBEB", borderColor: "#FDE68A" }}
@@ -390,7 +456,7 @@ export function CreateResumePage() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         {/* ── Template picker ── */}
@@ -425,15 +491,20 @@ export function CreateResumePage() {
           <ColorPicker label="Accent Color / Text Color" presets={ACCENT_PRESETS} value={accentColor} onChange={setAccentColor} />
         </div>
 
+        {/* ── Font picker ── */}
+        <div className="mb-6 sm:mb-8">
+          <FontPicker value={fontId} onChange={setFontId} />
+        </div>
+
         <div className="grid gap-8 lg:grid-cols-[1fr_480px]">
           {/* ── Form sections — extra bottom padding on mobile for floating button ── */}
           <div className="space-y-5 pb-28 sm:space-y-6 lg:pb-0">
             <PersonalInfoForm data={data} accentColor={accentColor} onChange={set} />
-            <ExperienceForm experiences={data.experiences} onAdd={addExp} onUpdate={updateExp} onRemove={removeExp} />
-            <EducationForm educations={data.educations} onAdd={addEdu} onUpdate={updateEdu} onRemove={removeEdu} />
-            <CertificationsForm certifications={data.certifications} onAdd={addCert} onUpdate={updateCert} onRemove={removeCert} />
-            <ProjectsForm projects={data.projects} onAdd={addProject} onUpdate={updateProject} onRemove={removeProject} />
-            <SkillsForm skills={data.skills} onChange={(skills) => set("skills", skills)} />
+            <ExperienceForm experiences={data?.experiences ?? []} onAdd={addExp} onUpdate={updateExp} onRemove={removeExp} />
+            <EducationForm educations={data?.educations ?? []} onAdd={addEdu} onUpdate={updateEdu} onRemove={removeEdu} />
+            <CertificationsForm certifications={data?.certifications ?? []} onAdd={addCert} onUpdate={updateCert} onRemove={removeCert} />
+            <ProjectsForm projects={data?.projects ?? []} onAdd={addProject} onUpdate={updateProject} onRemove={removeProject} />
+            <SkillsForm skills={data?.skills ?? []} onChange={(skills) => set("skills", skills)} />
           </div>
 
           {/* ── Live preview — desktop only ── */}
@@ -441,7 +512,7 @@ export function CreateResumePage() {
             <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-rose-500">Live Preview</p>
             <div className="overflow-hidden rounded-2xl border shadow-lg" style={{ borderColor: "#EDE3DB" }}>
               <div ref={previewRef} style={{ backgroundColor: bgColor }}>
-                <Preview data={data} bgColor={bgColor} accentColor={accentColor} />
+                <Preview data={data} bgColor={bgColor} accentColor={accentColor} fontFamily={fontFamily} />
               </div>
             </div>
           </div>
@@ -455,7 +526,7 @@ export function CreateResumePage() {
         style={{ position: "fixed", left: "-9999px", top: 0, width: "480px", pointerEvents: "none", zIndex: -1 }}
       >
         <div ref={printTargetRef} style={{ backgroundColor: bgColor }}>
-          <Preview data={data} bgColor={bgColor} accentColor={accentColor} />
+          <Preview data={data} bgColor={bgColor} accentColor={accentColor} fontFamily={fontFamily} />
         </div>
       </div>
 
@@ -490,7 +561,7 @@ export function CreateResumePage() {
           <div className="flex-1 overflow-auto bg-gray-50 p-4">
             <div className="overflow-x-auto rounded-2xl border shadow-lg" style={{ borderColor: "#EDE3DB" }}>
               <div style={{ minWidth: "360px", backgroundColor: bgColor }}>
-                <Preview data={data} bgColor={bgColor} accentColor={accentColor} />
+                <Preview data={data} bgColor={bgColor} accentColor={accentColor} fontFamily={fontFamily} />
               </div>
             </div>
           </div>

@@ -25,9 +25,9 @@ export function PersonalInfoForm({ data, accentColor, onChange }: Props) {
         <div className="relative">
           <div
             className="h-20 w-20 overflow-hidden rounded-full border-2 border-dashed border-border bg-secondary/40 transition-colors hover:border-rose-300"
-            style={data.photo ? { borderStyle: "solid", borderColor: accentColor } : {}}
+            style={data?.photo ? { borderStyle: "solid", borderColor: accentColor } : {}}
           >
-            {data.photo ? (
+            {data?.photo ? (
               <img src={data.photo} alt="profile" className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 text-muted-foreground">

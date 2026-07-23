@@ -12,13 +12,7 @@ const inputCls =
 
 // ── Tech tag input (self-contained) ──────────────────────────────────────────
 
-function TechTagInput({
-  tags,
-  onChange,
-}: {
-  tags: string[]
-  onChange: (updated: string[]) => void
-}) {
+function TechTagInput({ tags, onChange }: { tags: string[]; onChange: (updated: string[]) => void }) {
   const [input, setInput] = useState("")
 
   const addTag = () => {
@@ -32,20 +26,22 @@ function TechTagInput({
   return (
     <div>
       <div className="mb-1.5 flex flex-wrap gap-1.5">
-        {tags.map((tag) => (
-          <span
-            key={tag}
-            className="flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-700"
-          >
-            {tag}
-            <button
-              onClick={() => onChange(tags.filter((t) => t !== tag))}
-              className="text-rose-400 hover:text-rose-600"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        ))}
+        {tags && tags.length
+          ? tags.map((tag) => (
+              <span
+                key={tag}
+                className="flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-700"
+              >
+                {tag}
+                <button
+                  onClick={() => onChange(tags.filter((t) => t !== tag))}
+                  className="text-rose-400 hover:text-rose-600"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))
+          : null}
       </div>
       <div className="flex gap-2">
         <input
@@ -98,60 +94,57 @@ export function ProjectsForm({ projects, onAdd, onUpdate, onRemove }: Props) {
         </button>
       </div>
 
-      {projects.length === 0 && (
+      {projects && projects.length ? (
+        projects.map((proj, idx) => (
+          <div key={proj.id} className={cn("rounded-xl border border-border/60 p-4", idx > 0 && "mt-4")}>
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground">Project {idx + 1}</span>
+              <button
+                onClick={() => onRemove(proj.id)}
+                className="rounded-lg p-1 text-muted-foreground hover:bg-red-50 hover:text-red-500"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <input
+                className={inputCls}
+                placeholder="Project name"
+                value={proj.name}
+                onChange={(e) => onUpdate(proj.id, { name: e.target.value })}
+              />
+
+              <textarea
+                rows={2}
+                className={cn(inputCls, "resize-none")}
+                placeholder="Brief description — what it does, your role, and impact"
+                value={proj.description}
+                onChange={(e) => onUpdate(proj.id, { description: e.target.value })}
+              />
+
+              <div className="relative">
+                <ExternalLink className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  className={cn(inputCls, "pl-9")}
+                  placeholder="Live URL or GitHub link (optional)"
+                  value={proj.url}
+                  onChange={(e) => onUpdate(proj.id, { url: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <p className="mb-1.5 text-xs text-muted-foreground">Tech stack</p>
+                <TechTagInput tags={proj.tech} onChange={(tech) => onUpdate(proj.id, { tech })} />
+              </div>
+            </div>
+          </div>
+        ))
+      ) : (
         <p className="py-4 text-center text-sm text-muted-foreground">
           No projects added yet. Click &ldquo;Add&rdquo; to showcase your work.
         </p>
       )}
-
-      {projects.map((proj, idx) => (
-        <div key={proj.id} className={cn("rounded-xl border border-border/60 p-4", idx > 0 && "mt-4")}>
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground">Project {idx + 1}</span>
-            <button
-              onClick={() => onRemove(proj.id)}
-              className="rounded-lg p-1 text-muted-foreground hover:bg-red-50 hover:text-red-500"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          <div className="space-y-2">
-            <input
-              className={inputCls}
-              placeholder="Project name"
-              value={proj.name}
-              onChange={(e) => onUpdate(proj.id, { name: e.target.value })}
-            />
-
-            <textarea
-              rows={2}
-              className={cn(inputCls, "resize-none")}
-              placeholder="Brief description — what it does, your role, and impact"
-              value={proj.description}
-              onChange={(e) => onUpdate(proj.id, { description: e.target.value })}
-            />
-
-            <div className="relative">
-              <ExternalLink className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <input
-                className={cn(inputCls, "pl-9")}
-                placeholder="Live URL or GitHub link (optional)"
-                value={proj.url}
-                onChange={(e) => onUpdate(proj.id, { url: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <p className="mb-1.5 text-xs text-muted-foreground">Tech stack</p>
-              <TechTagInput
-                tags={proj.tech}
-                onChange={(tech) => onUpdate(proj.id, { tech })}
-              />
-            </div>
-          </div>
-        </div>
-      ))}
     </div>
   )
 }

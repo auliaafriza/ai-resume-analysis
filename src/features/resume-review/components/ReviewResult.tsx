@@ -157,29 +157,29 @@ export function ReviewResult({ result, lang, industry }: Readonly<ReviewResultPr
               "bg-white",
             )}
           >
-            <span className={cn("text-3xl font-bold leading-none", text)}>{result.overallScore}</span>
+            <span className={cn("text-3xl font-bold leading-none", text)}>{result?.overallScore}</span>
             <span className="mt-0.5 text-[10px] font-medium text-muted-foreground">/ 100</span>
           </div>
           <div className="min-w-0">
             <div className="mb-0.5 flex items-center gap-2">
-              <span className={cn("text-sm font-bold", text)}>{scoreLabel(result.overallScore)}</span>
+              <span className={cn("text-sm font-bold", text)}>{scoreLabel(result?.overallScore)}</span>
               <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-600">
                 {t.overAllScore}
               </span>
             </div>
-            <p className="text-sm leading-snug text-muted-foreground">{result.summary}</p>
+            <p className="text-sm leading-snug text-muted-foreground">{result?.summary}</p>
           </div>
         </div>
 
         {/* ── Industry benchmark panel ── */}
-        {benchmark && (
+        {benchmark ? (
           <div className="rounded-xl border border-border/60 bg-secondary/30 p-4">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t.benchmark}
               </p>
               <span className="flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-[11px] font-medium text-foreground shadow-sm" style={{ borderColor: "#EDE3DB", border: "1px solid" }}>
-                {benchmark.emoji} {lang === "id" ? benchmark.labelId : benchmark.label}
+                {benchmark?.emoji} {lang === "id" ? benchmark?.labelId : benchmark?.label}
               </span>
             </div>
             {/* Overall benchmark */}
@@ -187,25 +187,25 @@ export function ReviewResult({ result, lang, industry }: Readonly<ReviewResultPr
               <div className="flex-1">
                 <div className="mb-1 flex justify-between text-[11px]">
                   <span className="text-muted-foreground">{t.benchmarkAvg}</span>
-                  <span className="font-semibold text-foreground">{benchmark.overall}</span>
+                  <span className="font-semibold text-foreground">{benchmark?.overall}</span>
                 </div>
                 <div className="relative h-2 w-full overflow-hidden rounded-full bg-white/70">
                   {/* benchmark line */}
-                  <div className="absolute top-0 h-full rounded-full bg-border/80" style={{ width: `${benchmark.overall}%` }} />
+                  <div className="absolute top-0 h-full rounded-full bg-border/80" style={{ width: `${benchmark?.overall}%` }} />
                   {/* user score line */}
                   <div
-                    className={cn("absolute top-0 h-full rounded-full opacity-80", scoreColor(result.overallScore).bar)}
-                    style={{ width: `${result.overallScore}%` }}
+                    className={cn("absolute top-0 h-full rounded-full opacity-80", scoreColor(result?.overallScore).bar)}
+                    style={{ width: `${result?.overallScore}%` }}
                   />
                 </div>
               </div>
               <span className={cn(
                 "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold",
-                result.overallScore >= benchmark.overall
+                result?.overallScore >= benchmark?.overall
                   ? "bg-emerald-50 text-emerald-700"
                   : "bg-red-50 text-red-600"
               )}>
-                {result.overallScore >= benchmark.overall ? "▲" : "▼"} {Math.abs(result.overallScore - benchmark.overall)}pts {result.overallScore >= benchmark.overall ? t.benchmarkAbove : t.benchmarkBelow}
+                {result?.overallScore >= benchmark?.overall ? "▲" : "▼"} {Math.abs(result?.overallScore - benchmark?.overall)}pts {result?.overallScore >= benchmark?.overall ? t.benchmarkAbove : t.benchmarkBelow}
               </span>
             </div>
             {/* Legend */}
@@ -214,10 +214,10 @@ export function ReviewResult({ result, lang, industry }: Readonly<ReviewResultPr
               <span className="flex items-center gap-1"><span className="inline-block h-2 w-4 rounded-full" style={{ background: "linear-gradient(90deg, #E8856A, #C5527A)" }} />{t.benchmarkYou}</span>
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* ── Category breakdown ── */}
-        {result.scores.length > 0 && (
+        {result?.scores.length > 0 ? (
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t.categoryBreakdown}
@@ -253,10 +253,10 @@ export function ReviewResult({ result, lang, industry }: Readonly<ReviewResultPr
               })}
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* ── Strengths ── */}
-        {strength.length > 0 && (
+        {strength.length > 0 ? (
           <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
             <p className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
               <CheckCircle2 className="h-3.5 w-3.5" />
@@ -271,10 +271,10 @@ export function ReviewResult({ result, lang, industry }: Readonly<ReviewResultPr
               ))}
             </ul>
           </div>
-        )}
+        ) : null}
 
         {/* ── Improvements ── */}
-        {improvement.length > 0 && (
+        {improvement.length > 0 ? (
           <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-4">
             <p className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold text-amber-700">
               <AlertCircle className="h-3.5 w-3.5" />
@@ -289,10 +289,10 @@ export function ReviewResult({ result, lang, industry }: Readonly<ReviewResultPr
               ))}
             </ul>
           </div>
-        )}
+        ) : null}
 
         {/* ── Suggestions ── */}
-        {suggestion.length > 0 && (
+        {suggestion.length > 0 ? (
           <div className="rounded-xl border border-rose-100 bg-rose-50/60 p-4">
             <p className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold text-rose-700">
               <Lightbulb className="h-3.5 w-3.5" />
@@ -309,7 +309,7 @@ export function ReviewResult({ result, lang, industry }: Readonly<ReviewResultPr
               ))}
             </ol>
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="p-8">

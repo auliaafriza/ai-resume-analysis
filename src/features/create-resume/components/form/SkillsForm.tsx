@@ -46,7 +46,7 @@ export function SkillsForm({ skills, onChange }: Props) {
         </button>
       </div>
 
-      {skills.length > 0 && (
+      {skills && skills.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {skills.map((s) => (
             <span
@@ -60,7 +60,7 @@ export function SkillsForm({ skills, onChange }: Props) {
             </span>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

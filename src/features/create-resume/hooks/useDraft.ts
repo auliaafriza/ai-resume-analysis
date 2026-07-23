@@ -10,6 +10,7 @@ export interface DraftState {
   template: Template
   bgColor: string
   accentColor: string
+  fontId: string
   data: ResumeData
   savedAt: string // ISO string
 }

@@ -183,7 +183,7 @@ export function ResumeReviewPage() {
   const t = T[lang]
   const { mutate, isPending } = useMutationReview()
 
-  function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!file) {
       setFileError(t.fileError)
@@ -199,7 +199,7 @@ export function ResumeReviewPage() {
 
     mutate(formData, {
       onSuccess: (data) => {
-        if (data.data) {
+        if (data?.data) {
           setResult(data.data)
           toast.success(t.toastSuccess)
           setTimeout(() => {
@@ -213,7 +213,6 @@ export function ResumeReviewPage() {
   return (
     <>
       <LangToggle lang={lang} onToggle={() => setLang((l) => (l === "en" ? "id" : "en"))} />
-
       {/* ── HERO ────────────────────────────────────────────────────────── */}
       <section className="gradient-hero overflow-hidden pb-24 pt-20">
         <div className="mx-auto max-w-6xl px-6 text-center">

@@ -85,8 +85,8 @@ function StatCard({
         </div>
         <span className="text-xs font-medium text-gray-500">{label}</span>
       </div>
-      <p className="text-3xl font-bold text-gray-900">{value.toLocaleString()}</p>
-      {sub && <p className="mt-0.5 text-xs text-gray-400">{sub}</p>}
+      <p className="text-3xl font-bold text-gray-900">{value ? value.toLocaleString() : ""}</p>
+      <p className="mt-0.5 text-xs text-gray-400">{sub ?? ""}</p>
     </div>
   )
 }

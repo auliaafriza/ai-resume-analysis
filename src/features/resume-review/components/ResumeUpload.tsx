@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
+
 import { FileText, UploadCloud, X } from "lucide-react"
 
 import { cn } from "@/lib/utils/cn"
@@ -67,8 +68,8 @@ export function ResumeUpload({ file, onFileChange, error }: Readonly<ResumeUploa
         <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3">
           <FileText className="h-5 w-5 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-foreground">{file.name}</p>
-            <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(0)} KB</p>
+            <p className="truncate text-sm font-medium text-foreground">{file?.name ?? ""}</p>
+            <p className="text-xs text-muted-foreground">{file?.size ? (file?.size / 1024).toFixed(0) : 0} KB</p>
           </div>
           <button
             type="button"
@@ -89,7 +90,10 @@ export function ResumeUpload({ file, onFileChange, error }: Readonly<ResumeUploa
           tabIndex={0}
           onClick={() => inputRef.current?.click()}
           onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+          onDragOver={(e) => {
+            e.preventDefault()
+            setIsDragging(true)
+          }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={onDrop}
           className={cn(
@@ -109,13 +113,7 @@ export function ResumeUpload({ file, onFileChange, error }: Readonly<ResumeUploa
         </div>
       )}
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept={ACCEPTED_EXT}
-        className="hidden"
-        onChange={onInputChange}
-      />
+      <input ref={inputRef} type="file" accept={ACCEPTED_EXT} className="hidden" onChange={onInputChange} />
 
       {displayError && <p className="text-xs text-destructive">{displayError}</p>}
     </div>

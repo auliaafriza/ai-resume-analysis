@@ -597,8 +597,8 @@ export function CoverLetterPage() {
                         <FileText className="h-5 w-5" style={{ color: ACCENT }} />
                       </div>
                       <div className="text-left">
-                        <p className="text-sm font-semibold text-gray-800">{file.name}</p>
-                        <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(0)} KB</p>
+                        <p className="text-sm font-semibold text-gray-800">{file?.name ?? ""}</p>
+                        <p className="text-xs text-gray-400">{file?.size ? (file.size / 1024).toFixed(0) : 0} KB</p>
                       </div>
                       <button
                         className="ml-2 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"

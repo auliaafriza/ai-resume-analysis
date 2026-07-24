@@ -162,7 +162,7 @@ export function ReviewResult({ result, lang, industry }: Readonly<ReviewResultPr
           </div>
           <div className="min-w-0">
             <div className="mb-0.5 flex items-center gap-2">
-              <span className={cn("text-sm font-bold", text)}>{scoreLabel(result?.overallScore)}</span>
+              <span className={cn("text-sm font-bold", text)}>{scoreLabel(result?.overallScore ?? 0)}</span>
               <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-600">
                 {t.overAllScore}
               </span>

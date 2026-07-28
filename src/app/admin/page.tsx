@@ -258,10 +258,10 @@ export default function AdminPage() {
 
           {/* ── Stat cards ── */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <StatCard icon={Eye} label="Total Kunjungan" value={data.totalVisits} sub="Semua waktu" color={accent} />
-            <StatCard icon={Calendar} label="Hari Ini" value={data.todayVisits} sub={new Date().toLocaleDateString("id-ID")} color={coral} />
-            <StatCard icon={TrendingUp} label="7 Hari Terakhir" value={data.weekVisits} sub="Kunjungan minggu ini" color="#0F766E" />
-            <StatCard icon={Users} label="Unique Visitors" value={data.uniqueIPs} sub="Berdasarkan IP" color="#7C3AED" />
+            <StatCard icon={Eye} label="Total Kunjungan" value={data?.totalVisits ?? 0} sub="Semua waktu" color={accent} />
+            <StatCard icon={Calendar} label="Hari Ini" value={data?.todayVisits ?? 0} sub={new Date().toLocaleDateString("id-ID")} color={coral} />
+            <StatCard icon={TrendingUp} label="7 Hari Terakhir" value={data?.weekVisits ?? 0} sub="Kunjungan minggu ini" color="#0F766E" />
+            <StatCard icon={Users} label="Unique Visitors" value={data?.uniqueIPs ?? 0} sub="Berdasarkan IP" color="#7C3AED" />
           </div>
 
           {/* ── Daily chart ── */}
@@ -274,10 +274,10 @@ export default function AdminPage() {
                 <span className="ml-3 inline-block mr-1 h-2 w-3 rounded-full" style={{ backgroundColor: "#E8856A55" }} /> Lainnya
               </span>
             </div>
-            <MiniBarChart data={data.dailyChart} />
+            <MiniBarChart data={data?.dailyChart} />
             {/* X-axis labels: show every ~5th */}
             <div className="mt-1 flex overflow-x-auto">
-              {Object.keys(data.dailyChart).map((day, i) => (
+              {Object.keys(data?.dailyChart || {}).map((day, i) => (
                 <div key={day} className="flex-1 text-center" style={{ minWidth: 10 }}>
                   {i % 5 === 0 && (
                     <span className="text-[9px] text-gray-400">{new Date(day).getDate()}</span>
@@ -295,7 +295,7 @@ export default function AdminPage() {
                 <h2 className="text-sm font-semibold text-gray-800">Top Halaman</h2>
               </div>
               <div className="space-y-3">
-                {data.topPages.length === 0
+                {data?.topPages.length === 0
                   ? <p className="text-xs text-gray-400">Belum ada data.</p>
                   : data.topPages.map((p) => (
                       <BarRow
@@ -316,9 +316,9 @@ export default function AdminPage() {
                 <h2 className="text-sm font-semibold text-gray-800">Top Referrers</h2>
               </div>
               <div className="space-y-3">
-                {data.topReferrers.length === 0
+                {data?.topReferrers?.length === 0
                   ? <p className="text-xs text-gray-400">Tidak ada referrer (direct traffic).</p>
-                  : data.topReferrers.map((r) => (
+                  : data?.topReferrers.map((r) => (
                       <BarRow
                         key={r.ref}
                         label={r.ref}
@@ -340,7 +340,7 @@ export default function AdminPage() {
                 <h2 className="text-sm font-semibold text-gray-800">Browser</h2>
               </div>
               <div className="space-y-3">
-                {data.browsers.map((b) => (
+                {data?.browsers && data?.browsers.length ? data?.browsers.map((b) => (
                   <BarRow
                     key={b.name}
                     label={b.name}
@@ -348,7 +348,7 @@ export default function AdminPage() {
                     max={data.browsers[0]?.count ?? 1}
                     color="#0F766E"
                   />
-                ))}
+                )) : null}
               </div>
             </div>
 

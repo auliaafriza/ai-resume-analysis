@@ -6,6 +6,7 @@ import {
   AlertCircle,
   Check,
   ClipboardCopy,
+  Clock,
   Download,
   FileText,
   Loader2,
@@ -16,8 +17,9 @@ import {
   X,
 } from "lucide-react"
 
-import { cn } from "@/lib/utils/cn"
+import { CoverLetterPreview, type CoverLetterTemplateId } from "@/features/cover-letter/components/CoverLetterPreview"
 import { timeAgo, useLocalDraft } from "@/lib/useLocalDraft"
+import { cn } from "@/lib/utils/cn"
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 
@@ -32,6 +34,8 @@ const T = {
     pastePlaceholder: "Paste your resume content here…",
     dropLabel: "Drag & drop or click to upload",
     dropSub: "PDF or Word (.docx) — max 5 MB",
+    yourName: "Your Name",
+    yourNamePlaceholder: "e.g. John Doe",
     companyLabel: "Company Name",
     companyPlaceholder: "e.g. Google",
     roleLabel: "Job Title / Role",
@@ -53,7 +57,7 @@ const T = {
     words: "words",
     copy: "Copy",
     copied: "Copied!",
-    download: "Download .txt",
+    download: "Download PDF",
     errorPrefix: "Error: ",
     fileError: "Only PDF or Word (.docx) files are supported.",
     sizeError: "File size must be under 5 MB.",
@@ -75,6 +79,8 @@ const T = {
     pastePlaceholder: "Tempel isi CV kamu di sini…",
     dropLabel: "Seret & lepas atau klik untuk upload",
     dropSub: "PDF atau Word (.docx) — maks 5 MB",
+    yourName: "Nama Anda",
+    yourNamePlaceholder: "contoh: John Doe",
     companyLabel: "Nama Perusahaan",
     companyPlaceholder: "mis. Google",
     roleLabel: "Posisi / Jabatan",
@@ -96,7 +102,7 @@ const T = {
     words: "kata",
     copy: "Salin",
     copied: "Tersalin!",
-    download: "Download .txt",
+    download: "Download PDF",
     errorPrefix: "Error: ",
     fileError: "Hanya file PDF atau Word (.docx) yang didukung.",
     sizeError: "Ukuran file harus di bawah 5 MB.",
@@ -117,12 +123,12 @@ type InputMode = "upload" | "paste"
 // ── Style constants ───────────────────────────────────────────────────────────
 
 const FONTS: { id: string; label: string; family: string; category: "sans" | "serif" }[] = [
-  { id: "georgia",      label: "Georgia",      family: "Georgia, serif",              category: "serif" },
-  { id: "merriweather", label: "Merriweather", family: "'Merriweather', serif",       category: "serif" },
-  { id: "playfair",     label: "Playfair",     family: "'Playfair Display', serif",   category: "serif" },
-  { id: "inter",        label: "Inter",        family: "'Inter', sans-serif",         category: "sans"  },
-  { id: "lato",         label: "Lato",         family: "'Lato', sans-serif",          category: "sans"  },
-  { id: "raleway",      label: "Raleway",      family: "'Raleway', sans-serif",       category: "sans"  },
+  { id: "georgia", label: "Georgia", family: "Georgia, serif", category: "serif" },
+  { id: "merriweather", label: "Merriweather", family: "'Merriweather', serif", category: "serif" },
+  { id: "playfair", label: "Playfair", family: "'Playfair Display', serif", category: "serif" },
+  { id: "inter", label: "Inter", family: "'Inter', sans-serif", category: "sans" },
+  { id: "lato", label: "Lato", family: "'Lato', sans-serif", category: "sans" },
+  { id: "raleway", label: "Raleway", family: "'Raleway', sans-serif", category: "sans" },
 ]
 
 const GOOGLE_FONTS_URL =
@@ -136,17 +142,28 @@ const GOOGLE_FONTS_URL =
 const DEFAULT_FONT_ID = "georgia"
 
 const COVER_ACCENT_PRESETS = [
-  { label: "Navy",      value: "#1E3A5F" },
-  { label: "Charcoal",  value: "#333333" },
-  { label: "Rose",      value: "#C5527A" },
-  { label: "Forest",    value: "#166534" },
-  { label: "Teal",      value: "#0F766E" },
-  { label: "Slate",     value: "#475569" },
-  { label: "Gold",      value: "#8B6914" },
-  { label: "Burgundy",  value: "#7F1D1D" },
+  { label: "Navy", value: "#1E3A5F" },
+  { label: "Charcoal", value: "#333333" },
+  { label: "Rose", value: "#C5527A" },
+  { label: "Forest", value: "#166534" },
+  { label: "Teal", value: "#0F766E" },
+  { label: "Slate", value: "#475569" },
+  { label: "Gold", value: "#8B6914" },
+  { label: "Burgundy", value: "#7F1D1D" },
 ]
 
 const DEFAULT_OUTPUT_ACCENT = "#1E3A5F"
+
+// ── Template constants ────────────────────────────────────────────────────────
+
+const COVER_TEMPLATES: { id: CoverLetterTemplateId; label: string; desc: string }[] = [
+  { id: "simple", label: "Simple", desc: "Content-first · versatile" },
+  { id: "modern", label: "Modern", desc: "Sidebar · clean lines" },
+  { id: "creative", label: "Creative", desc: "Bold header · decorative" },
+  { id: "professional", label: "Professional", desc: "Formal · structured" },
+]
+
+const DEFAULT_TEMPLATE: CoverLetterTemplateId = "simple"
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -168,10 +185,7 @@ const BG = "#FAF7F4"
 
 function SectionCard({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className="rounded-2xl border bg-white p-6"
-      style={{ borderColor: BORDER }}
-    >
+    <div className="rounded-2xl border bg-white p-6" style={{ borderColor: BORDER }}>
       {children}
     </div>
   )
@@ -197,7 +211,9 @@ const inputStyle = {
 function FontRow({ value, onChange }: { value: string; onChange: (id: string) => void }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#8B5E52" }}>Font</p>
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#8B5E52" }}>
+        Font
+      </p>
       <div className="flex flex-wrap gap-2">
         {FONTS.map((f) => (
           <button
@@ -223,7 +239,9 @@ function FontRow({ value, onChange }: { value: string; onChange: (id: string) =>
 function AccentRow({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#8B5E52" }}>Accent Color</p>
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#8B5E52" }}>
+        Accent Color
+      </p>
       <div className="flex flex-wrap items-center gap-2">
         {COVER_ACCENT_PRESETS.map((p) => (
           <button
@@ -266,10 +284,12 @@ export function CoverLetterPage() {
   // Paste state
   const [pasteText, setPasteText] = useState("")
 
-  // Job details
-  const [company, setCompany] = useState("")
-  const [jobTitle, setJobTitle] = useState("")
-  const [jobDescription, setJobDescription] = useState("")
+  const [dataCoverLetter, setDataCoverLetter] = useState({
+    yourName: "",
+    company: "",
+    jobTitle: "",
+    jobDescription: "",
+  })
 
   // Options
   const [tone, setTone] = useState<Tone>("professional")
@@ -277,6 +297,7 @@ export function CoverLetterPage() {
   // Style options
   const [fontId, setFontId] = useState(DEFAULT_FONT_ID)
   const [outputAccent, setOutputAccent] = useState(DEFAULT_OUTPUT_ACCENT)
+  const [templateId, setTemplateId] = useState<CoverLetterTemplateId>(DEFAULT_TEMPLATE)
 
   // Output state
   const [coverLetter, setCoverLetter] = useState("")
@@ -295,52 +316,109 @@ export function CoverLetterPage() {
   }, [])
 
   // ── Draft persistence ──────────────────────────────────────────────────────
-  const [showRestoreBanner, setShowRestoreBanner] = useState(false)
+  const [showDraftModal, setShowDraftModal] = useState(false)
+  const [draftMeta, setDraftMeta] = useState<{
+    company: string
+    jobTitle: string
+    snippet: string
+    lang: Lang
+  } | null>(null)
 
-  const { hasDraft, savedAt, scheduleSave, loadDraft, clearDraft } =
-    useLocalDraft<{
-      lang: Lang
-      mode: InputMode
-      pasteText: string
-      company: string
-      jobTitle: string
-      jobDescription: string
-      tone: Tone
-      fontId: string
-      outputAccent: string
-      coverLetter: string
-    }>("ai-resume-builder:cover-letter-draft")
+  const { savedAt, scheduleSave, clearDraft } = useLocalDraft<{
+    lang: Lang
+    mode: InputMode
+    pasteText: string
+    yourName: string
+    company: string
+    jobTitle: string
+    jobDescription: string
+    tone: Tone
+    fontId: string
+    outputAccent: string
+    templateId: CoverLetterTemplateId
+    coverLetter: string
+  }>("ai-resume-builder:cover-letter-draft")
 
-  // Show restore banner on mount if draft exists
+  // On mount: peek at localStorage directly (avoids hasDraft timing issues)
   useEffect(() => {
-    if (hasDraft) setShowRestoreBanner(true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    try {
+      const raw = localStorage.getItem("ai-resume-builder:cover-letter-draft")
+      if (raw) {
+        const parsed = JSON.parse(raw) as {
+          company?: string
+          jobTitle?: string
+          coverLetter?: string
+          lang?: Lang
+        }
+        setDraftMeta({
+          company: parsed.company ?? "",
+          jobTitle: parsed.jobTitle ?? "",
+          snippet: parsed.coverLetter?.slice(0, 160) ?? "",
+          lang: parsed.lang ?? "en",
+        })
+        if (parsed.company || parsed.jobTitle || parsed.coverLetter) {
+          setShowDraftModal(true)
+        }
+      }
+    } catch {
+      // localStorage unavailable / malformed
+    }
   }, [])
 
   // Auto-save on every relevant state change (file excluded — not serialisable)
   useEffect(() => {
-    scheduleSave({ lang, mode, pasteText, company, jobTitle, jobDescription, tone, fontId, outputAccent, coverLetter })
-  }, [lang, mode, pasteText, company, jobTitle, jobDescription, tone, fontId, outputAccent, coverLetter, scheduleSave])
+    scheduleSave({
+      lang,
+      mode,
+      pasteText,
+      yourName: dataCoverLetter.yourName,
+      company: dataCoverLetter.company,
+      jobTitle: dataCoverLetter.jobTitle,
+      jobDescription: dataCoverLetter.jobDescription,
+      tone,
+      fontId,
+      outputAccent,
+      templateId,
+      coverLetter,
+    })
+  }, [lang, mode, pasteText, dataCoverLetter, tone, fontId, outputAccent, templateId, coverLetter, scheduleSave])
 
   const handleRestoreDraft = () => {
-    const draft = loadDraft()
+    // Read directly from localStorage so we always get the freshest copy,
+    // regardless of when the hook's loadDraft closure was created.
+    let draft: Record<string, unknown> | null = null
+    try {
+      const raw = localStorage.getItem("ai-resume-builder:cover-letter-draft")
+      if (raw) draft = JSON.parse(raw) as Record<string, unknown>
+    } catch {
+      /* ignore */
+    }
     if (!draft) return
-    setLang(draft.lang)
-    setMode(draft.mode)
-    setPasteText(draft.pasteText)
-    setCompany(draft.company)
-    setJobTitle(draft.jobTitle)
-    setJobDescription(draft.jobDescription)
-    setTone(draft.tone)
-    setFontId(draft.fontId ?? DEFAULT_FONT_ID)
-    setOutputAccent(draft.outputAccent ?? DEFAULT_OUTPUT_ACCENT)
-    setCoverLetter(draft.coverLetter)
-    setShowRestoreBanner(false)
+
+    // Apply fallbacks for every field — handles old draft formats where some
+    // fields didn't exist yet (which causes silent undefined → crash bugs).
+    setLang((draft.lang as Lang) ?? "en")
+    setMode((draft.mode as InputMode) ?? "upload")
+    setPasteText((draft.pasteText as string) ?? "")
+    setDataCoverLetter({
+      yourName: (draft.yourName as string) ?? "",
+      company: (draft.company as string) ?? "",
+      jobTitle: (draft.jobTitle as string) ?? "",
+      jobDescription: (draft.jobDescription as string) ?? "",
+    })
+    setTone((draft.tone as Tone) ?? "professional")
+    setFontId((draft.fontId as string) ?? DEFAULT_FONT_ID)
+    setOutputAccent((draft.outputAccent as string) ?? DEFAULT_OUTPUT_ACCENT)
+    setTemplateId((draft.templateId as CoverLetterTemplateId) ?? DEFAULT_TEMPLATE)
+    setCoverLetter((draft.coverLetter as string) ?? "")
+    setShowDraftModal(false)
+    setDraftMeta(null)
   }
 
   const handleDiscardDraft = () => {
     clearDraft()
-    setShowRestoreBanner(false)
+    setShowDraftModal(false)
+    setDraftMeta(null)
   }
 
   const t = T[lang]
@@ -351,7 +429,11 @@ export function CoverLetterPage() {
 
   const validateAndSetFile = (f: File) => {
     setError("")
-    const allowed = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"]
+    const allowed = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/msword",
+    ]
     if (!allowed.includes(f.type)) {
       setError(t.fileError)
       return
@@ -393,9 +475,10 @@ export function CoverLetterPage() {
       if (mode === "upload" && file) {
         const form = new FormData()
         form.append("file", file)
-        form.append("company", company)
-        form.append("jobTitle", jobTitle)
-        form.append("jobDescription", jobDescription)
+        form.append("yourName", dataCoverLetter.yourName)
+        form.append("company", dataCoverLetter.company)
+        form.append("jobTitle", dataCoverLetter.jobTitle)
+        form.append("jobDescription", dataCoverLetter.jobDescription)
         form.append("tone", tone)
         form.append("language", lang)
         res = await fetch("/api/cover-letter", { method: "POST", body: form })
@@ -405,9 +488,10 @@ export function CoverLetterPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             resumeText: pasteText,
-            company,
-            jobTitle,
-            jobDescription,
+            yourName: dataCoverLetter.yourName,
+            company: dataCoverLetter.company,
+            jobTitle: dataCoverLetter.jobTitle,
+            jobDescription: dataCoverLetter.jobDescription,
             tone,
             language: lang,
           }),
@@ -438,16 +522,234 @@ export function CoverLetterPage() {
     })
   }
 
-  const handleDownload = () => {
-    const blob = new Blob([coverLetter], { type: "text/plain;charset=utf-8" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    const slug = (company || "company").toLowerCase().replace(/\s+/g, "-")
-    const role = (jobTitle || "role").toLowerCase().replace(/\s+/g, "-")
-    a.download = `cover-letter-${slug}-${role}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
+  const handleDownload = async () => {
+    const { default: jsPDF } = await import("jspdf")
+    const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" })
+
+    const margin  = 22
+    const pageW   = 210
+    const pageH   = 297
+    const contentW = pageW - margin * 2
+
+    // ── Accent color → RGB ───────────────────────────────────────
+    const hex = outputAccent.replace("#", "")
+    const cr = parseInt(hex.slice(0, 2), 16)
+    const cg = parseInt(hex.slice(2, 4), 16)
+    const cb = parseInt(hex.slice(4, 6), 16)
+    // Light variant (accent mixed 70% toward white) for secondary elements
+    const lr = Math.round(cr + (255 - cr) * 0.7)
+    const lg = Math.round(cg + (255 - cg) * 0.7)
+    const lb = Math.round(cb + (255 - cb) * 0.7)
+
+    const dateStr = new Date().toLocaleDateString("en-US", {
+      year: "numeric", month: "long", day: "numeric",
+    })
+    const { yourName, company, jobTitle } = dataCoverLetter
+    const paragraphs = coverLetter.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
+
+    // ── Helper: render body paragraphs ───────────────────────────
+    const addBody = (startY: number, x: number, maxW: number) => {
+      let y = startY
+      doc.setTextColor(65, 65, 65)
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(9.5)
+      for (const para of paragraphs) {
+        const lines = doc.splitTextToSize(para, maxW)
+        if (y + lines.length * 5.3 > 282) {
+          doc.addPage()
+          y = 20
+        }
+        doc.text(lines, x, y)
+        y += lines.length * 5.3 + 4.5
+      }
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // SIMPLE — stripe + meta row + separator + body
+    // ────────────────────────────────────────────────────────────
+    if (templateId === "simple") {
+      // Accent stripe
+      doc.setFillColor(cr, cg, cb)
+      doc.rect(0, 0, pageW, 1.8, "F")
+
+      // Left meta block
+      let metaY = 18
+      if (yourName) {
+        doc.setFont("helvetica", "normal").setFontSize(8.5).setTextColor(150, 150, 150)
+        doc.text(yourName, margin, metaY);  metaY += 5
+      }
+      if (company) {
+        doc.setFont("helvetica", "bold").setFontSize(11).setTextColor(25, 25, 25)
+        doc.text(company, margin, metaY);   metaY += 5.5
+      }
+      if (jobTitle) {
+        doc.setFont("helvetica", "normal").setFontSize(8.5).setTextColor(150, 150, 150)
+        doc.text(jobTitle, margin, metaY)
+      }
+      // Date right-aligned
+      doc.setFont("helvetica", "normal").setFontSize(8.5).setTextColor(150, 150, 150)
+      doc.text(dateStr, pageW - margin, 18, { align: "right" })
+
+      // Thin separator
+      const sepY = Math.max(metaY + 6, 36)
+      doc.setDrawColor(215, 215, 215).setLineWidth(0.3)
+      doc.line(margin, sepY, pageW - margin, sepY)
+
+      addBody(sepY + 8, margin, contentW)
+
+    // ────────────────────────────────────────────────────────────
+    // MODERN — colored sidebar + body with accent dots
+    // ────────────────────────────────────────────────────────────
+    } else if (templateId === "modern") {
+      const sideW  = Math.round(pageW * 0.3)  // ≈ 63 mm
+      const bodyX  = sideW + 9
+      const bodyW  = pageW - sideW - 9 - 10
+
+      // Sidebar background (full page)
+      doc.setFillColor(cr, cg, cb)
+      doc.rect(0, 0, sideW, pageH, "F")
+
+      // Decorative circles (semi-transparent white)
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        doc.setGState(new (doc as any).GState({ "fill-opacity": 0.12 }))
+        doc.setFillColor(255, 255, 255)
+        doc.circle(sideW - 6, 6, 11, "F")
+        doc.circle(-3, pageH - 15, 14, "F")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        doc.setGState(new (doc as any).GState({ "fill-opacity": 1 }))
+      } catch { /* fallback — older jsPDF without GState */ }
+
+      // Sidebar text
+      let sY = 22
+      if (yourName) {
+        doc.setFont("helvetica", "bold").setFontSize(7).setTextColor(255, 255, 255)
+        doc.text(yourName.toUpperCase(), 6, sY, { maxWidth: sideW - 10 });  sY += 7
+      }
+      // Short white divider
+      doc.setDrawColor(255, 255, 255).setLineWidth(0.7)
+      doc.line(6, sY, 20, sY);  sY += 5
+      if (jobTitle) {
+        doc.setFont("helvetica", "normal").setFontSize(6.5).setTextColor(220, 220, 220)
+        const jtLines = doc.splitTextToSize(jobTitle.toUpperCase(), sideW - 12)
+        doc.text(jtLines, 6, sY);  sY += jtLines.length * 4.5 + 3
+      }
+      if (company) {
+        doc.setFont("helvetica", "bold").setFontSize(10).setTextColor(255, 255, 255)
+        const coLines = doc.splitTextToSize(company, sideW - 12)
+        doc.text(coLines, 6, sY)
+      }
+      // Date at sidebar bottom
+      doc.setFont("helvetica", "normal").setFontSize(6.5).setTextColor(185, 185, 185)
+      doc.text(dateStr, 6, pageH - 14, { maxWidth: sideW - 10 })
+
+      // Body — two accent dots at top
+      doc.setFillColor(cr, cg, cb)
+      doc.circle(bodyX, 20, 2, "F")
+      doc.setFillColor(lr, lg, lb)
+      doc.circle(bodyX + 6.5, 20, 1.3, "F")
+
+      addBody(28, bodyX, bodyW)
+
+    // ────────────────────────────────────────────────────────────
+    // CREATIVE — bold full-width header + gradient line + body
+    // ────────────────────────────────────────────────────────────
+    } else if (templateId === "creative") {
+      const headerH = 38
+
+      // Header background
+      doc.setFillColor(cr, cg, cb)
+      doc.rect(0, 0, pageW, headerH, "F")
+
+      // Decorative circles
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        doc.setGState(new (doc as any).GState({ "fill-opacity": 0.10 }))
+        doc.setFillColor(255, 255, 255)
+        doc.circle(pageW - 8, -8, 16, "F")
+        doc.circle(pageW - 26, headerH + 4, 8, "F")
+        doc.circle(pageW - 10, headerH - 3, 4, "F")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        doc.setGState(new (doc as any).GState({ "fill-opacity": 1 }))
+      } catch { /* fallback */ }
+
+      // Header text
+      let hY = 14
+      if (yourName) {
+        doc.setFont("helvetica", "bold").setFontSize(7.5).setTextColor(255, 255, 255)
+        doc.text(yourName.toUpperCase(), margin, hY);  hY += 5.5
+      }
+      if (jobTitle) {
+        doc.setFont("helvetica", "normal").setFontSize(7).setTextColor(210, 210, 210)
+        doc.text(jobTitle.toUpperCase(), margin, hY);  hY += 5
+      }
+      if (company) {
+        doc.setFont("helvetica", "bold").setFontSize(17).setTextColor(255, 255, 255)
+        const coLines = doc.splitTextToSize(company, pageW - margin * 2 - 20)
+        doc.text(coLines, margin, hY)
+      }
+
+      // Gradient accent underline (approximated with partial fill)
+      doc.setFillColor(cr, cg, cb)
+      doc.rect(0, headerH, pageW * 0.55, 1.8, "F")
+      doc.setFillColor(lr, lg, lb)
+      doc.rect(pageW * 0.55, headerH, pageW * 0.25, 1.8, "F")
+
+      // Date
+      let bodyY = headerH + 12
+      doc.setFont("helvetica", "normal").setFontSize(8).setTextColor(140, 140, 140)
+      doc.text(dateStr, margin, bodyY);  bodyY += 7
+
+      addBody(bodyY, margin, contentW)
+
+    // ────────────────────────────────────────────────────────────
+    // PROFESSIONAL — formal header + double rule + Re: line
+    // ────────────────────────────────────────────────────────────
+    } else {
+      let hY = 20
+      if (yourName) {
+        doc.setFont("helvetica", "bold").setFontSize(13).setTextColor(15, 15, 15)
+        doc.text(yourName, margin, hY);  hY += 6
+      }
+      if (company) {
+        doc.setFont("helvetica", "bold").setFontSize(yourName ? 11 : 13).setTextColor(15, 15, 15)
+        doc.text(company, margin, hY);   hY += 5
+      }
+      if (jobTitle) {
+        doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(120, 120, 120)
+        doc.text(jobTitle, margin, hY)
+      }
+      doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(120, 120, 120)
+      doc.text(dateStr, pageW - margin, 20, { align: "right" })
+
+      // Double rule: thick accent + thin light-accent
+      const ruleY = Math.max(hY + 7, 34)
+      doc.setFillColor(cr, cg, cb)
+      doc.rect(margin, ruleY, contentW, 0.8, "F")
+      doc.setFillColor(lr, lg, lb)
+      doc.rect(margin, ruleY + 1.3, contentW, 0.4, "F")
+
+      // "Re:" line
+      let bodyY = ruleY + 8
+      if (jobTitle || company) {
+        doc.setFont("helvetica", "bold").setFontSize(9).setTextColor(cr, cg, cb)
+        const reLabel = "Re: "
+        doc.text(reLabel, margin, bodyY)
+        const labelW = doc.getTextWidth(reLabel)
+        const reText = `Application for ${jobTitle ?? ""}${company ? ` at ${company}` : ""}`
+        doc.setFont("helvetica", "normal").setTextColor(60, 60, 60)
+        doc.text(reText, margin + labelW, bodyY, { maxWidth: contentW - labelW })
+        bodyY += 9
+      }
+
+      addBody(bodyY, margin, contentW)
+    }
+
+    // ── Save ──────────────────────────────────────────────────────
+    const nameSlug = (yourName || "cover-letter").toLowerCase().replace(/\s+/g, "-")
+    const coSlug   = (company   || "company")     .toLowerCase().replace(/\s+/g, "-")
+    const roleSlug = (jobTitle  || "role")         .toLowerCase().replace(/\s+/g, "-")
+    doc.save(`cover-letter-${nameSlug}-${coSlug}-${roleSlug}.pdf`)
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -455,7 +757,10 @@ export function CoverLetterPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: BG }}>
       {/* ── Page header ── */}
-      <div className="border-b px-6 py-10" style={{ borderColor: BORDER, background: "linear-gradient(180deg, #FDF0F0 0%, #FAF7F4 100%)" }}>
+      <div
+        className="border-b px-6 py-10"
+        style={{ borderColor: BORDER, background: "linear-gradient(180deg, #FDF0F0 0%, #FAF7F4 100%)" }}
+      >
         <div className="mx-auto max-w-5xl text-center">
           <div
             className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl shadow-md"
@@ -474,20 +779,13 @@ export function CoverLetterPage() {
 
       {/* ── Language toggle ── */}
       <div className="flex justify-center py-4">
-        <div
-          className="flex gap-1 rounded-xl border p-1"
-          style={{ borderColor: BORDER, backgroundColor: "white" }}
-        >
+        <div className="flex gap-1 rounded-xl border p-1" style={{ borderColor: BORDER, backgroundColor: "white" }}>
           {(["en", "id"] as const).map((l) => (
             <button
               key={l}
               onClick={() => setLang(l)}
               className="rounded-lg px-5 py-1.5 text-sm font-medium transition-all"
-              style={
-                lang === l
-                  ? { backgroundColor: ACCENT, color: "white" }
-                  : { color: "#A07B6E" }
-              }
+              style={lang === l ? { backgroundColor: ACCENT, color: "white" } : { color: "#A07B6E" }}
             >
               {l === "en" ? "🇬🇧 EN" : "🇮🇩 ID"}
             </button>
@@ -495,44 +793,198 @@ export function CoverLetterPage() {
         </div>
       </div>
 
-      {/* ── Restore draft banner ── */}
-      {showRestoreBanner && (
-        <div className="border-b px-4 py-3" style={{ backgroundColor: "#FFFBEB", borderColor: "#FDE68A" }}>
-          <div className="mx-auto flex max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-            <div className="flex items-start gap-2.5 text-xs sm:text-sm" style={{ color: "#92400E" }}>
-              <RotateCcw className="mt-0.5 h-4 w-4 shrink-0" />
+      {/* ── Draft restore modal ── */}
+      {showDraftModal && draftMeta && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
+        >
+          <div className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
+            {/* Modal header */}
+            <div
+              className="flex items-center gap-3 border-b px-5 py-4"
+              style={{ borderColor: "#FDE68A", backgroundColor: "#FFFBEB" }}
+            >
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                style={{ backgroundColor: "#FEF3C7" }}
+              >
+                <RotateCcw className="h-5 w-5" style={{ color: "#D97706" }} />
+              </div>
               <div>
-                <p>{t.draftBanner}</p>
-                {/* Remind user that file uploads aren't persisted */}
-                <p className="mt-0.5 opacity-70">{t.draftFileNote}</p>
+                <p className="text-sm font-semibold" style={{ color: "#92400E" }}>
+                  {draftMeta.lang === "id" ? "Draft Tersimpan" : "Saved Draft Found"}
+                </p>
+                <div className="mt-0.5 flex items-center gap-1" style={{ color: "#B45309" }}>
+                  <Clock className="h-3 w-3" />
+                  <p className="text-[11px]">
+                    {draftMeta.lang === "id" ? "Lanjutkan dari mana kamu berhenti?" : "Continue where you left off?"}
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+
+            {/* Draft preview */}
+            <div className="px-5 py-4">
+              {(draftMeta.company || draftMeta.jobTitle) && (
+                <div className="mb-3 flex flex-wrap gap-1.5">
+                  {draftMeta.company && (
+                    <span
+                      className="rounded-lg px-2.5 py-1 text-[11px] font-semibold"
+                      style={{ backgroundColor: "#F3F4F6", color: "#374151" }}
+                    >
+                      {draftMeta.company}
+                    </span>
+                  )}
+                  {draftMeta.jobTitle && (
+                    <span
+                      className="rounded-lg px-2.5 py-1 text-[11px] font-semibold"
+                      style={{ backgroundColor: "#FDF0F0", color: ACCENT }}
+                    >
+                      {draftMeta.jobTitle}
+                    </span>
+                  )}
+                </div>
+              )}
+              {draftMeta.snippet ? (
+                <p className="text-xs leading-relaxed" style={{ color: "#6B7280" }}>
+                  {draftMeta.snippet}
+                  {draftMeta.snippet.length >= 160 ? "…" : ""}
+                </p>
+              ) : (
+                <p className="text-xs italic" style={{ color: "#9CA3AF" }}>
+                  {draftMeta.lang === "id"
+                    ? "Form tersimpan, belum ada cover letter."
+                    : "Form data saved, no cover letter yet."}
+                </p>
+              )}
+              <p className="mt-3 text-[11px]" style={{ color: "#9CA3AF" }}>
+                {draftMeta.lang === "id"
+                  ? "⚠️ File upload tidak tersimpan — upload ulang CV kamu."
+                  : "⚠️ File attachments aren't saved — please re-upload your resume."}
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 border-t px-5 py-4" style={{ borderColor: "#F3F4F6" }}>
               <button
                 onClick={handleRestoreDraft}
-                className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: "#D97706" }}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+                style={{ backgroundColor: ACCENT }}
               >
-                {t.draftRestore}
+                <RotateCcw className="h-3.5 w-3.5" />
+                {draftMeta.lang === "id" ? "Pulihkan Draft" : "Restore Draft"}
               </button>
               <button
                 onClick={handleDiscardDraft}
-                className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:bg-amber-100"
-                style={{ color: "#92400E" }}
+                className="flex flex-1 items-center justify-center rounded-xl border py-2.5 text-sm font-medium transition-colors hover:bg-gray-50"
+                style={{ borderColor: "#E5E7EB", color: "#6B7280" }}
               >
-                {t.draftDiscard}
+                {draftMeta.lang === "id" ? "Mulai Baru" : "Start Fresh"}
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* ── Template picker ── */}
+      <div className="border-b px-6 py-5" style={{ borderColor: BORDER, backgroundColor: "white" }}>
+        <div className="mx-auto max-w-5xl">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest" style={{ color: ACCENT }}>
+            Template
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {COVER_TEMPLATES.map((tpl) => (
+              <button
+                key={tpl.id}
+                onClick={() => setTemplateId(tpl.id)}
+                className={cn(
+                  "rounded-xl border-2 p-3 text-left transition-all",
+                  templateId === tpl.id
+                    ? "border-rose-400 bg-rose-50 shadow-sm"
+                    : "border-transparent bg-gray-50 hover:border-rose-200",
+                )}
+              >
+                {/* Mini template thumbnail */}
+                <div className="mb-2 h-10 w-full overflow-hidden rounded-md border border-gray-100 bg-white">
+                  {/* Simple: full-width accent stripe → meta row → lines */}
+                  {tpl.id === "simple" && (
+                    <div className="h-full p-1.5">
+                      <div className="mb-1 h-0.5 w-full rounded" style={{ backgroundColor: outputAccent }} />
+                      <div className="mb-1 flex justify-between">
+                        <div className="h-1 w-8 rounded bg-gray-300" />
+                        <div className="h-1 w-5 rounded bg-gray-200" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="h-0.5 w-full rounded bg-gray-200" />
+                        <div className="h-0.5 w-5/6 rounded bg-gray-200" />
+                        <div className="h-0.5 w-full rounded bg-gray-200" />
+                      </div>
+                    </div>
+                  )}
+                  {/* Modern: colored sidebar + body */}
+                  {tpl.id === "modern" && (
+                    <div className="flex h-full">
+                      <div className="relative w-[30%] overflow-hidden p-1.5" style={{ backgroundColor: outputAccent }}>
+                        <div className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-white/10" />
+                        <div className="mt-1 h-1 w-5 rounded bg-white/70" />
+                        <div className="mt-0.5 h-0.5 w-4 rounded bg-white/40" />
+                      </div>
+                      <div className="flex-1 space-y-0.5 p-1.5">
+                        <div className="h-0.5 w-full rounded bg-gray-200" />
+                        <div className="h-0.5 w-4/5 rounded bg-gray-200" />
+                        <div className="h-0.5 w-full rounded bg-gray-200" />
+                        <div className="h-0.5 w-3/4 rounded bg-gray-200" />
+                      </div>
+                    </div>
+                  )}
+                  {/* Creative: bold full-width accent header + body */}
+                  {tpl.id === "creative" && (
+                    <div className="h-full">
+                      <div className="relative overflow-hidden px-2 py-1.5" style={{ backgroundColor: outputAccent }}>
+                        <div className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-white/10" />
+                        <div className="h-1.5 w-10 rounded bg-white/80" />
+                        <div className="mt-0.5 h-0.5 w-6 rounded bg-white/40" />
+                      </div>
+                      <div className="space-y-0.5 p-1.5">
+                        <div className="h-0.5 w-full rounded bg-gray-200" />
+                        <div className="h-0.5 w-5/6 rounded bg-gray-200" />
+                        <div className="h-0.5 w-full rounded bg-gray-200" />
+                      </div>
+                    </div>
+                  )}
+                  {/* Professional: structured header + double rule + body */}
+                  {tpl.id === "professional" && (
+                    <div className="h-full p-1.5">
+                      <div className="mb-0.5 flex justify-between">
+                        <div className="h-1 w-8 rounded bg-gray-400" />
+                        <div className="h-0.5 w-5 rounded bg-gray-300" />
+                      </div>
+                      <div className="mb-0.5 h-0.5 w-full rounded" style={{ backgroundColor: outputAccent }} />
+                      <div className="mb-1 h-px w-full rounded" style={{ backgroundColor: `${outputAccent}44` }} />
+                      <div className="space-y-0.5">
+                        <div className="h-0.5 w-full rounded bg-gray-200" />
+                        <div className="h-0.5 w-5/6 rounded bg-gray-200" />
+                        <div className="h-0.5 w-full rounded bg-gray-200" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className={cn("text-xs font-semibold", templateId === tpl.id ? "text-rose-600" : "text-gray-700")}>
+                  {tpl.label}
+                </p>
+                <p className="mt-0.5 hidden text-[10px] text-gray-400 sm:block">{tpl.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* ── Main grid ── */}
       <div className="mx-auto max-w-5xl px-6 pb-16">
         <div className="grid gap-6 lg:grid-cols-[1fr_480px]">
           {/* ── Left: Form ── */}
           <div className="space-y-5">
-
             {/* Resume input */}
             <SectionCard>
               <p className="mb-4 text-xs font-semibold uppercase tracking-widest" style={{ color: ACCENT }}>
@@ -576,7 +1028,10 @@ export function CoverLetterPage() {
                     borderColor: isDragging ? ACCENT : "#E5E7EB",
                     backgroundColor: isDragging ? ACCENT_LIGHT : "#F9FAFB",
                   }}
-                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setIsDragging(true)
+                  }}
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
@@ -602,7 +1057,10 @@ export function CoverLetterPage() {
                       </div>
                       <button
                         className="ml-2 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-                        onClick={(e) => { e.stopPropagation(); setFile(null) }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setFile(null)
+                        }}
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -633,18 +1091,31 @@ export function CoverLetterPage() {
               )}
             </SectionCard>
 
-            {/* Job details */}
+            {/* Personal Information & Job details */}
             <SectionCard>
               <p className="mb-4 text-xs font-semibold uppercase tracking-widest" style={{ color: ACCENT }}>
                 Job Details
               </p>
+              <div className="grid grid-cols-1 gap-3 pb-1">
+                <div>
+                  <Label>{t.yourName}</Label>
+                  <input
+                    type="text"
+                    value={dataCoverLetter.yourName}
+                    onChange={(e) => setDataCoverLetter({ ...dataCoverLetter, yourName: e.target.value })}
+                    placeholder={t.yourNamePlaceholder}
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label>{t.companyLabel}</Label>
                   <input
                     type="text"
-                    value={company}
-                    onChange={(e) => setCompany(e.target.value)}
+                    value={dataCoverLetter.company}
+                    onChange={(e) => setDataCoverLetter({ ...dataCoverLetter, company: e.target.value })}
                     placeholder={t.companyPlaceholder}
                     className={inputCls}
                     style={inputStyle}
@@ -654,8 +1125,8 @@ export function CoverLetterPage() {
                   <Label>{t.roleLabel}</Label>
                   <input
                     type="text"
-                    value={jobTitle}
-                    onChange={(e) => setJobTitle(e.target.value)}
+                    value={dataCoverLetter.jobTitle}
+                    onChange={(e) => setDataCoverLetter({ ...dataCoverLetter, jobTitle: e.target.value })}
                     placeholder={t.rolePlaceholder}
                     className={inputCls}
                     style={inputStyle}
@@ -666,8 +1137,8 @@ export function CoverLetterPage() {
                 <Label>{t.jdLabel}</Label>
                 <textarea
                   rows={6}
-                  value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
+                  value={dataCoverLetter.jobDescription}
+                  onChange={(e) => setDataCoverLetter({ ...dataCoverLetter, jobDescription: e.target.value })}
                   placeholder={t.jdPlaceholder}
                   className={inputCls + " resize-y"}
                   style={inputStyle}
@@ -692,10 +1163,7 @@ export function CoverLetterPage() {
                         : { borderColor: "#E5E7EB", backgroundColor: "#F9FAFB" }
                     }
                   >
-                    <p
-                      className="text-xs font-semibold capitalize"
-                      style={{ color: tone === tn ? ACCENT : "#374151" }}
-                    >
+                    <p className="text-xs font-semibold capitalize" style={{ color: tone === tn ? ACCENT : "#374151" }}>
                       {t.tones[tn]}
                     </p>
                     <p className="mt-0.5 text-[11px]" style={{ color: tone === tn ? "#D4697A" : "#9CA3AF" }}>
@@ -724,14 +1192,19 @@ export function CoverLetterPage() {
                 style={{ borderColor: "#FCA5A5", backgroundColor: "#FEF2F2" }}
               >
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-                <p className="text-xs text-red-700">{t.errorPrefix}{error}</p>
+                <p className="text-xs text-red-700">
+                  {t.errorPrefix}
+                  {error}
+                </p>
               </div>
             )}
 
             {/* Draft saved chip */}
             {savedAt && (
-              <div className="flex items-center justify-between rounded-xl border px-3.5 py-2.5"
-                style={{ borderColor: "#D1FAE5", backgroundColor: "#F0FDF4" }}>
+              <div
+                className="flex items-center justify-between rounded-xl border px-3.5 py-2.5"
+                style={{ borderColor: "#D1FAE5", backgroundColor: "#F0FDF4" }}
+              >
                 <div className="flex items-center gap-2 text-xs font-medium" style={{ color: "#059669" }}>
                   <Save className="h-3.5 w-3.5" />
                   {t.draftSaved} {timeAgo(savedAt)}
@@ -777,14 +1250,22 @@ export function CoverLetterPage() {
               {/* Output header */}
               <div
                 className="flex items-center justify-between border-b px-5 py-4"
-                style={{ borderColor: BORDER, background: `linear-gradient(135deg, ${outputAccent}18 0%, #FAF7F4 100%)` }}
+                style={{
+                  borderColor: BORDER,
+                  background: `linear-gradient(135deg, ${outputAccent}18 0%, #FAF7F4 100%)`,
+                }}
               >
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4" style={{ color: outputAccent }} />
-                  <p className="text-sm font-semibold" style={{ color: "#2D1B15" }}>{t.outputTitle}</p>
+                  <p className="text-sm font-semibold" style={{ color: "#2D1B15" }}>
+                    {t.outputTitle}
+                  </p>
                 </div>
                 {coverLetter && (
-                  <span className="rounded-full px-2.5 py-0.5 text-[11px] font-medium" style={{ backgroundColor: `${outputAccent}18`, color: outputAccent }}>
+                  <span
+                    className="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                    style={{ backgroundColor: `${outputAccent}18`, color: outputAccent }}
+                  >
                     {wordCount} {t.words}
                   </span>
                 )}
@@ -800,12 +1281,15 @@ export function CoverLetterPage() {
                     </div>
                   </div>
                 ) : coverLetter ? (
-                  <div
-                    className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800"
-                    style={{ fontFamily, lineHeight: "1.75" }}
-                  >
-                    {coverLetter}
-                  </div>
+                  <CoverLetterPreview
+                    template={templateId}
+                    text={coverLetter}
+                    fontFamily={fontFamily}
+                    accentColor={outputAccent}
+                    company={dataCoverLetter.company}
+                    jobTitle={dataCoverLetter.jobTitle}
+                    yourName={dataCoverLetter.yourName}
+                  />
                 ) : (
                   <div className="flex h-64 items-center justify-center">
                     <div className="text-center">
@@ -823,10 +1307,7 @@ export function CoverLetterPage() {
 
               {/* Action buttons */}
               {coverLetter && (
-                <div
-                  className="flex gap-2 border-t p-4"
-                  style={{ borderColor: BORDER }}
-                >
+                <div className="flex gap-2 border-t p-4" style={{ borderColor: BORDER }}>
                   <button
                     onClick={handleCopy}
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2.5 text-xs font-semibold transition-all hover:opacity-80"
